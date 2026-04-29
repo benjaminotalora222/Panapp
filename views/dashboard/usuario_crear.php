@@ -24,7 +24,7 @@ require_once __DIR__ . '/../layouts/header.php';
 </div>
 
 <!-- Card formulario -->
-<div class="bg-white rounded-2xl border" style="border-color:#F3D5B5; max-width:600px;">
+<div class="bg-white rounded-2xl border" style="border-color:#F3D5B5; max-width:600px; margin:0 auto;">
 
     <div class="px-6 py-5 border-b" style="border-color:#F3D5B5;">
         <h2 class="text-xl font-black" style="color:#1C0A00;">
