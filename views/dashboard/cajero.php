@@ -122,22 +122,23 @@ require_once __DIR__ . '/../layouts/header.php';
             <i class="fas fa-arrow-right" style="color:#A87D5C;"></i>
         </a>
 
-        <!-- Reporte de ventas -->
-        <a href="../reportes/ventas.php"
-           class="flex items-center gap-4 border rounded-xl p-4 transition-all no-underline"
-           style="border-color:#F3D5B5;"
-           onmouseover="this.style.background='#FFF7ED';this.style.borderColor='#F97316';this.style.boxShadow='0 4px 16px rgba(249,115,22,0.15)';"
-           onmouseout="this.style.background='';this.style.borderColor='#F3D5B5';this.style.boxShadow='';">
-            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0" style="background:#FFF7ED;border:1.5px solid #F3D5B5;">📊</div>
-            <div class="flex-1">
-                <p class="font-black text-sm mb-0.5" style="color:#1C0A00;">Reporte de Ventas</p>
-                <p class="text-xs font-semibold" style="color:#A87D5C;">Diario, semanal y mensual</p>
-            </div>
-            <i class="fas fa-arrow-right" style="color:#A87D5C;"></i>
-        </a>
+<!-- Reporte de ventas -->
+<a href="/PanApp/views/reportes/index.php"
+   class="flex items-center gap-4 border rounded-xl p-4 transition-all no-underline"
+   style="border-color:#F3D5B5;"
+   onmouseover="this.style.background='#FFF7ED';this.style.borderColor='#F97316';this.style.boxShadow='0 4px 16px rgba(249,115,22,0.15)';"
+   onmouseout="this.style.background='';this.style.borderColor='#F3D5B5';this.style.boxShadow='';">
+    <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0" style="background:#FFF7ED;border:1.5px solid #F3D5B5;">📊</div>
+    <div class="flex-1">
+        <p class="font-black text-sm mb-0.5" style="color:#1C0A00;">Reporte de Ventas</p>
+        <p class="text-xs font-semibold" style="color:#A87D5C;">Diario, semanal y mensual</p>
+    </div>
+    <i class="fas fa-arrow-right" style="color:#A87D5C;"></i>
+</a>
+
 
         <!-- Reporte de productos -->
-        <a href="../reportes/productos.php"
+        <a href="/PanApp/views/reportes/index.php"
            class="flex items-center gap-4 border rounded-xl p-4 transition-all no-underline"
            style="border-color:#F3D5B5;"
            onmouseover="this.style.background='#FFF7ED';this.style.borderColor='#F97316';this.style.boxShadow='0 4px 16px rgba(249,115,22,0.15)';"
