@@ -622,6 +622,202 @@
         }
         .footer-copy span { color: var(--orange); font-weight: 900; }
 
+        /* ── BARRA DE PROGRESO AL CARGAR ── */
+        #page-loader {
+            position: fixed;
+            top: 0; left: 0;
+            width: 0%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--orange), #FB923C, var(--orange));
+            background-size: 200% 100%;
+            z-index: 9999;
+            transition: width 0.4s ease;
+            animation: shimmerBar 1.2s linear infinite;
+        }
+        @keyframes shimmerBar {
+            0%   { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* ── CURSOR TRAIL ── */
+        .cursor-dot {
+            position: fixed;
+            width: 8px; height: 8px;
+            background: var(--orange);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
+            opacity: 0;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s;
+        }
+
+        /* ── NAV LOGO SPIN ON HOVER ── */
+        .nav-logo {
+            transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.3s;
+        }
+        .nav-logo:hover {
+            transform: rotate(15deg) scale(1.12);
+            box-shadow: 0 6px 20px rgba(249,115,22,0.55);
+        }
+
+        /* ── HERO TAG SHIMMER ── */
+        .hero-tag {
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-tag::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 60%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+            animation: tagShimmer 3s ease-in-out infinite;
+        }
+        @keyframes tagShimmer {
+            0%   { left: -100%; }
+            50%  { left: 150%; }
+            100% { left: 150%; }
+        }
+
+        /* ── HERO BOTÓN RIPPLE ── */
+        .hero-btn, .cta-btn {
+            position: relative;
+            overflow: hidden;
+        }
+        .hero-btn::after, .cta-btn::after {
+            content: '';
+            position: absolute;
+            width: 0; height: 0;
+            background: rgba(255,255,255,0.25);
+            border-radius: 50%;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.5s ease, height 0.5s ease, opacity 0.5s ease;
+            opacity: 0;
+        }
+        .hero-btn:active::after, .cta-btn:active::after {
+            width: 300px; height: 300px;
+            opacity: 0;
+        }
+
+        /* ── HERO SCROLL INDICATOR ── */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            animation: fadeUp 1s ease both 0.8s;
+        }
+        .scroll-indicator span {
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--text-light);
+        }
+        .scroll-mouse {
+            width: 22px; height: 34px;
+            border: 2px solid var(--border);
+            border-radius: 11px;
+            display: flex;
+            justify-content: center;
+            padding-top: 5px;
+        }
+        .scroll-mouse::before {
+            content: '';
+            width: 3px; height: 7px;
+            background: var(--orange);
+            border-radius: 2px;
+            animation: scrollWheel 1.6s ease-in-out infinite;
+        }
+        @keyframes scrollWheel {
+            0%   { transform: translateY(0); opacity: 1; }
+            80%  { transform: translateY(10px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 0; }
+        }
+
+        /* ── STATS BAND COUNTER ── */
+        .stat-num {
+            transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+        }
+        .stat-item:hover .stat-num {
+            transform: scale(1.15);
+        }
+
+        /* ── CARD SHINE ── */
+        .card::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -60%;
+            width: 40%; height: 200%;
+            background: linear-gradient(105deg, transparent, rgba(255,255,255,0.18), transparent);
+            transform: skewX(-15deg);
+            transition: left 0.6s ease;
+            pointer-events: none;
+        }
+        .card:hover::after {
+            left: 130%;
+        }
+
+        /* ── FEATURE NUM GLOW ── */
+        .feature-item:hover .feature-num {
+            color: var(--orange);
+            text-shadow: 0 0 20px rgba(249,115,22,0.3);
+            transition: color 0.3s, text-shadow 0.3s;
+        }
+
+        /* ── CTA STRIP ORBS ANIMADOS ── */
+        .cta-strip::before {
+            animation: orbFloat1 7s ease-in-out infinite;
+        }
+        .cta-strip::after {
+            animation: orbFloat2 9s ease-in-out infinite;
+        }
+        @keyframes orbFloat1 {
+            0%,100% { transform: translate(0,0) scale(1); }
+            50%      { transform: translate(30px, 20px) scale(1.08); }
+        }
+        @keyframes orbFloat2 {
+            0%,100% { transform: translate(0,0) scale(1); }
+            50%      { transform: translate(-20px, -15px) scale(1.05); }
+        }
+
+        /* ── BG ICONS MÁS VARIADOS ── */
+        .bg-icon:nth-child(odd) {
+            animation-name: floatIconA;
+        }
+        .bg-icon:nth-child(even) {
+            animation-name: floatIconB;
+        }
+        @keyframes floatIconA {
+            0%,100% { transform: translateY(0) rotate(0deg) scale(1); }
+            33%      { transform: translateY(-18px) rotate(10deg) scale(1.05); }
+            66%      { transform: translateY(-8px) rotate(-6deg) scale(0.97); }
+        }
+        @keyframes floatIconB {
+            0%,100% { transform: translateY(0) rotate(0deg) scale(1); }
+            40%      { transform: translateY(-22px) rotate(-12deg) scale(1.08); }
+            70%      { transform: translateY(-5px) rotate(8deg) scale(0.95); }
+        }
+
+        /* ── REVEAL MÁS SUAVE CON ESCALA ── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(28px) scale(0.98);
+            transition: opacity 0.7s cubic-bezier(0.22,1,0.36,1),
+                        transform 0.7s cubic-bezier(0.22,1,0.36,1);
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
         /* ── RESPONSIVE ── */
         @media (max-width: 1024px) {
             .cards-grid { grid-template-columns: repeat(2, 1fr); }
@@ -642,6 +838,9 @@
     </style>
 </head>
 <body>
+
+    <!-- Barra de progreso al cargar -->
+    <div id="page-loader"></div>
 
     <!-- Background pattern -->
     <div class="bg-pattern">
@@ -667,7 +866,6 @@
             <a href="#inicio" class="active">Inicio</a>
             <a href="#modulos">Módulos</a>
             <a href="#por-que">¿Por qué?</a>
-            <a href="#reportes">Reportes</a>
             <a href="/PanApp/views/usuarios/login.php" class="btn-nav">🗝️ Iniciar sesión</a>
         </div>
     </nav>
@@ -688,20 +886,26 @@
                 <i class="fas fa-arrow-down"></i> Ver módulos
             </a>
         </div>
+
+        <!-- Scroll indicator -->
+        <div class="scroll-indicator">
+            <div class="scroll-mouse"></div>
+            <span>Scroll</span>
+        </div>
     </section>
 
     <!-- STATS BAND -->
     <div class="stats-band reveal">
         <div class="stat-item">
-            <span class="stat-num">+500</span>
+            <span class="stat-num" data-count="500" data-prefix="+">+500</span>
             <span class="stat-label">Ventas registradas</span>
         </div>
         <div class="stat-item">
-            <span class="stat-num">100%</span>
+            <span class="stat-num" data-count="100" data-suffix="%">100%</span>
             <span class="stat-label">Sin papel</span>
         </div>
         <div class="stat-item">
-            <span class="stat-num">3</span>
+            <span class="stat-num" data-count="3">3</span>
             <span class="stat-label">Módulos activos</span>
         </div>
         <div class="stat-item">
@@ -754,7 +958,7 @@
                 <h3>Usuarios</h3>
                 <p>Gestiona empleados y administradores, controla permisos y accesos.</p>
                 <div class="card-footer">
-                    <span class="badge badge-blue">Super Admin</span>
+                    <span class="badge badge-admin">Admin</span>
                     <i class="fas fa-arrow-right arrow-icon"></i>
                 </div>
             </a>
@@ -821,7 +1025,22 @@
     </footer>
 
     <script>
-        // Scroll reveal
+        // ── Barra de progreso al cargar ──
+        var loader = document.getElementById('page-loader');
+        var progress = 0;
+        var loaderInterval = setInterval(function() {
+            progress += Math.random() * 18;
+            if (progress >= 90) { progress = 90; clearInterval(loaderInterval); }
+            loader.style.width = progress + '%';
+        }, 80);
+        window.addEventListener('load', function() {
+            clearInterval(loaderInterval);
+            loader.style.width = '100%';
+            setTimeout(function() { loader.style.opacity = '0'; }, 300);
+            setTimeout(function() { loader.style.display = 'none'; }, 700);
+        });
+
+        // ── Scroll reveal con escala ──
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(e => {
                 if (e.isIntersecting) {
@@ -830,11 +1049,39 @@
                 }
             });
         }, { threshold: 0.12 });
-
         document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-        // Active nav link on scroll
-        const sections = document.querySelectorAll('section[id], a[id]');
+        // ── Contadores animados en stats band ──
+        function animateCounter(el) {
+            var target  = parseInt(el.dataset.count, 10);
+            var prefix  = el.dataset.prefix  || '';
+            var suffix  = el.dataset.suffix  || '';
+            var start   = 0;
+            var duration = 1400;
+            var startTime = null;
+            function step(timestamp) {
+                if (!startTime) startTime = timestamp;
+                var elapsed = timestamp - startTime;
+                var value = Math.min(Math.floor((elapsed / duration) * target), target);
+                el.textContent = prefix + value + suffix;
+                if (value < target) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+        }
+
+        var statsObserver = new IntersectionObserver(function(entries) {
+            entries.forEach(function(e) {
+                if (e.isIntersecting) {
+                    e.target.querySelectorAll('.stat-num[data-count]').forEach(animateCounter);
+                    statsObserver.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.4 });
+        var statsBand = document.querySelector('.stats-band');
+        if (statsBand) statsObserver.observe(statsBand);
+
+        // ── Active nav link on scroll ──
+        const sections = document.querySelectorAll('section[id]');
         const navLinks = document.querySelectorAll('.nav-links a:not(.btn-nav)');
         window.addEventListener('scroll', () => {
             let current = '';
@@ -846,6 +1093,57 @@
                 if (a.getAttribute('href') === '#' + current) a.classList.add('active');
             });
         }, { passive: true });
+
+        // ── Ripple en botones ──
+        document.querySelectorAll('.hero-btn, .cta-btn').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                var ripple = document.createElement('span');
+                var rect   = btn.getBoundingClientRect();
+                var size   = Math.max(rect.width, rect.height) * 2;
+                ripple.style.cssText = [
+                    'position:absolute',
+                    'border-radius:50%',
+                    'background:rgba(255,255,255,0.3)',
+                    'width:' + size + 'px',
+                    'height:' + size + 'px',
+                    'left:' + (e.clientX - rect.left - size/2) + 'px',
+                    'top:' + (e.clientY - rect.top - size/2) + 'px',
+                    'transform:scale(0)',
+                    'animation:rippleAnim 0.55s ease-out forwards',
+                    'pointer-events:none'
+                ].join(';');
+                btn.appendChild(ripple);
+                setTimeout(function() { ripple.remove(); }, 600);
+            });
+        });
+
+        // ── Keyframe ripple dinámico ──
+        (function() {
+            var style = document.createElement('style');
+            style.textContent = '@keyframes rippleAnim { to { transform:scale(1); opacity:0; } }';
+            document.head.appendChild(style);
+        })();
+
+        // ── Scroll indicator desaparece al hacer scroll ──
+        var scrollIndicator = document.querySelector('.scroll-indicator');
+        if (scrollIndicator) {
+            window.addEventListener('scroll', function() {
+                scrollIndicator.style.opacity = window.scrollY > 80 ? '0' : '1';
+                scrollIndicator.style.transition = 'opacity 0.4s';
+            }, { passive: true });
+        }
+
+        // ── Nav logo: pequeño bounce al hacer click ──
+        var navLogo = document.querySelector('.nav-logo');
+        if (navLogo) {
+            navLogo.addEventListener('click', function() {
+                navLogo.style.transform = 'rotate(360deg) scale(1.15)';
+                navLogo.style.transition = 'transform 0.5s cubic-bezier(0.34,1.56,0.64,1)';
+                setTimeout(function() {
+                    navLogo.style.transform = '';
+                }, 520);
+            });
+        }
     </script>
 </body>
 </html>
