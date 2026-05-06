@@ -876,7 +876,7 @@
             <span class="dot"></span>
             🥖 Sistema de gestión para panaderías
         </div>
-        <h1>El mejor aroma es el del<br><span>pan recién hecho</span></h1>
+        <h1>Vine por pan…<br><span>y terminé llevándome media panadería</span></h1>
         <p>Registra ventas, controla tu inventario y genera reportes sin complicaciones. Hecho con ❤️ para panaderías colombianas.</p>
         <div class="hero-actions">
             <a href="/PanApp/views/usuarios/login.php" class="hero-btn">
