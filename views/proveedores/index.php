@@ -35,13 +35,13 @@ require_once __DIR__ . '/../layouts/header.php';
             Gestión de <span style="color:#F97316;">Proveedores</span>
         </h2>
         <?php if (strtoupper($usuario['rol']) === 'ADMIN'): ?>
-        <a href="crear.php"
-           class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black text-white transition-all no-underline"
+        <button type="button" onclick="abrirModalProveedor()"
+           class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black text-white transition-all"
            style="background:#F97316;box-shadow:0 4px 12px rgba(249,115,22,0.3);"
-           onmouseover="this.style.background='#EA6A0A';"
-           onmouseout="this.style.background='#F97316';">
+           onmouseover="this.style.background='#EA6A0A';this.style.transform='translateY(-1px)';"
+           onmouseout="this.style.background='#F97316';this.style.transform='';">
             <i class="fas fa-plus"></i> Agregar Proveedor
-        </a>
+        </button>
         <?php endif; ?>
     </div>
 
@@ -128,3 +128,99 @@ require_once __DIR__ . '/../layouts/header.php';
 </div>
 
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>
+
+<!-- ══ MODAL NUEVO PROVEEDOR ══ -->
+<div id="modal-proveedor" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+     style="background:rgba(28,10,0,0.45);backdrop-filter:blur(4px);display:none!important;">
+    <div id="modal-proveedor-box" class="bg-white rounded-2xl w-full shadow-2xl"
+         style="max-width:500px;border:1px solid #F3D5B5;transform:scale(0.92) translateY(16px);opacity:0;transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1),opacity 0.2s ease;">
+
+        <div class="flex items-center justify-between px-6 py-5 border-b" style="border-color:#F3D5B5;">
+            <div>
+                <h3 class="text-lg font-black" style="color:#1C0A00;">Nuevo <span style="color:#F97316;">Proveedor</span></h3>
+                <p class="text-xs font-semibold mt-0.5" style="color:#A87D5C;">Registra un nuevo proveedor</p>
+            </div>
+            <button onclick="cerrarModal('modal-proveedor','modal-proveedor-box')"
+                    class="w-8 h-8 rounded-xl flex items-center justify-center text-sm transition-all"
+                    style="background:#FFF7ED;border:1px solid #F3D5B5;color:#A87D5C;"
+                    onmouseover="this.style.background='#FEE2E2';this.style.color='#DC2626';"
+                    onmouseout="this.style.background='#FFF7ED';this.style.color='#A87D5C';">✕</button>
+        </div>
+
+        <form id="form-proveedor" class="px-6 py-5 flex flex-col gap-4">
+            <?php
+            $camposProv = [
+                ['nombre',    'Nombre',    'fa-truck',          'Ej. Harinera del Valle', 'text',  true],
+                ['telefono',  'Teléfono',  'fa-phone',          'Ej. 3001234567',         'text',  false],
+                ['correo',    'Correo',    'fa-envelope',       'proveedor@ejemplo.com',  'email', false],
+                ['direccion', 'Dirección', 'fa-map-marker-alt', 'Ej. Calle 10 # 5-20',   'text',  false],
+            ];
+            foreach ($camposProv as [$campo, $label, $icon, $ph, $type, $req]):
+            ?>
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-black uppercase tracking-wider" style="color:#6B4F3A;">
+                    <?= $label ?><?= $req ? ' <span style="color:#F97316;">*</span>' : ' <span class="font-semibold normal-case" style="color:#A87D5C;">(opcional)</span>' ?>
+                </label>
+                <div class="relative">
+                    <i class="fas <?= $icon ?> absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:#A87D5C;"></i>
+                    <input type="<?= $type ?>" name="<?= $campo ?>" <?= $req ? 'required' : '' ?> placeholder="<?= $ph ?>"
+                           class="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm font-semibold outline-none transition-all"
+                           style="background:#FFF7ED;border:1.5px solid #F3D5B5;color:#1C0A00;"
+                           onfocus="this.style.borderColor='#F97316';this.style.background='#fff';"
+                           onblur="this.style.borderColor='#F3D5B5';this.style.background='#FFF7ED';">
+                </div>
+            </div>
+            <?php endforeach; ?>
+
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-black uppercase tracking-wider" style="color:#6B4F3A;">Estado</label>
+                <div class="relative">
+                    <i class="fas fa-toggle-on absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:#A87D5C;"></i>
+                    <select name="estado" class="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm font-semibold outline-none appearance-none"
+                            style="background:#FFF7ED;border:1.5px solid #F3D5B5;color:#1C0A00;"
+                            onfocus="this.style.borderColor='#F97316';" onblur="this.style.borderColor='#F3D5B5';">
+                        <option value="activo">✅ Activo</option>
+                        <option value="inactivo">❌ Inactivo</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="error-proveedor" class="hidden px-4 py-3 rounded-xl text-sm font-bold"
+                 style="background:#FEE2E2;color:#991B1B;border:1px solid #FCA5A5;"></div>
+
+            <div class="flex gap-3 pt-1">
+                <button type="submit" id="btn-proveedor"
+                        class="flex-1 py-2.5 rounded-xl text-sm font-black text-white flex items-center justify-center gap-2"
+                        style="background:#F97316;box-shadow:0 4px 14px rgba(249,115,22,0.3);"
+                        onmouseover="this.style.background='#EA6A0A';" onmouseout="this.style.background='#F97316';">
+                    <i class="fas fa-plus"></i> <span id="btn-proveedor-txt">Crear Proveedor</span>
+                </button>
+                <button type="button" onclick="cerrarModal('modal-proveedor','modal-proveedor-box')"
+                        class="px-5 py-2.5 rounded-xl text-sm font-black transition-all"
+                        style="background:#FFF7ED;border:1.5px solid #F3D5B5;color:#6B4F3A;"
+                        onmouseover="this.style.background='#F3D5B5';" onmouseout="this.style.background='#FFF7ED';">
+                    Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function abrirModalProveedor() { abrirModal('modal-proveedor','modal-proveedor-box'); document.getElementById('form-proveedor').reset(); document.getElementById('error-proveedor').classList.add('hidden'); }
+
+document.getElementById('form-proveedor').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var btn = document.getElementById('btn-proveedor');
+    var txt = document.getElementById('btn-proveedor-txt');
+    var err = document.getElementById('error-proveedor');
+    btn.disabled = true; txt.textContent = 'Guardando...'; btn.style.opacity = '0.75';
+    fetch('/PanApp/controllers/ProveedorController.php?accion=crear', { method:'POST', body: new FormData(this) })
+    .then(function() {
+        Swal.fire({ icon:'success', title:'¡Proveedor creado!', text:'El proveedor fue registrado correctamente.', confirmButtonColor:'#F97316' })
+        .then(function() { window.location.reload(); });
+    })
+    .catch(function() { err.textContent = '⚠️ Error de conexión.'; err.classList.remove('hidden'); })
+    .finally(function() { btn.disabled = false; txt.textContent = 'Crear Proveedor'; btn.style.opacity = '1'; });
+});
+</script>

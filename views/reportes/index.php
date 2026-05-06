@@ -26,6 +26,11 @@ switch ($periodo) {
         $fechaHasta   = date('Y-m-t');
         $labelPeriodo = 'Este mes — ' . date('F Y');
         break;
+    case 'todo':
+        $fechaDesde   = '2000-01-01';
+        $fechaHasta   = date('Y-m-d');
+        $labelPeriodo = 'Todas las ventas';
+        break;
     default:
         $fechaDesde   = date('Y-m-d');
         $fechaHasta   = date('Y-m-d');
@@ -108,7 +113,7 @@ require_once __DIR__ . '/../layouts/header.php';
         <p class="text-sm font-semibold mt-0.5" style="color:#A87D5C;">📅 <?= $labelPeriodo ?></p>
     </div>
     <div class="flex items-center gap-2 flex-wrap">
-        <?php foreach (['diario'=>'Hoy','semanal'=>'Esta semana','mensual'=>'Este mes'] as $key=>$label): ?>
+        <?php foreach (['diario'=>'Hoy','semanal'=>'Esta semana','mensual'=>'Este mes','todo'=>'Todas'] as $key=>$label): ?>
         <a href="?periodo=<?= $key ?>&tab=<?= $tab ?>"
            class="px-4 py-2 rounded-xl text-sm font-black no-underline transition-all"
            style="<?= $periodo===$key ? 'background:#F97316;color:#fff;box-shadow:0 4px 12px rgba(249,115,22,0.3);' : 'background:#FFF7ED;border:1px solid #F3D5B5;color:#6B4F3A;' ?>"
@@ -116,13 +121,13 @@ require_once __DIR__ . '/../layouts/header.php';
             <?= $label ?>
         </a>
         <?php endforeach; ?>
-        <a href="exportar_pdf.php?periodo=<?= $periodo ?>&tab=<?= $tab ?>"
-           class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black no-underline transition-all"
+        <button type="button" onclick="abrirModalExportarPDF()"
+           class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black transition-all"
            style="background:#1C0A00;color:#fff;"
            onmouseover="this.style.background='#3D1A00';"
            onmouseout="this.style.background='#1C0A00';">
             <i class="fas fa-file-pdf"></i> Exportar PDF
-        </a>
+        </button>
     </div>
 </div>
 
@@ -281,3 +286,79 @@ require_once __DIR__ . '/../layouts/header.php';
 <?php endif; ?>
 
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>
+
+<!-- ══ MODAL EXPORTAR PDF ══ -->
+<div id="modal-exportar-pdf" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+     style="background:rgba(28,10,0,0.5);backdrop-filter:blur(4px);display:none!important;">
+    <div id="modal-exportar-pdf-box" class="bg-white rounded-2xl w-full shadow-2xl"
+         style="max-width:420px;border:1px solid #F3D5B5;transform:scale(0.92) translateY(16px);opacity:0;transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1),opacity 0.2s ease;">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-5 border-b" style="border-color:#F3D5B5;background:linear-gradient(135deg,#1C0A00,#3D1A00);border-radius:16px 16px 0 0;">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center text-lg" style="background:rgba(255,255,255,0.1);">
+                    <i class="fas fa-file-pdf" style="color:#fff;"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-black text-white">Exportar PDF</h3>
+                    <p class="text-xs font-semibold" style="color:rgba(255,255,255,0.65);">Selecciona el período a exportar</p>
+                </div>
+            </div>
+            <button onclick="cerrarModal('modal-exportar-pdf','modal-exportar-pdf-box')"
+                    class="w-8 h-8 rounded-xl flex items-center justify-center text-sm transition-all"
+                    style="background:rgba(255,255,255,0.1);color:#fff;"
+                    onmouseover="this.style.background='rgba(255,255,255,0.2)';"
+                    onmouseout="this.style.background='rgba(255,255,255,0.1)';">✕</button>
+        </div>
+
+        <!-- Opciones de período -->
+        <div class="px-6 py-5 flex flex-col gap-3">
+
+            <p class="text-xs font-black uppercase tracking-wider mb-1" style="color:#A87D5C;">Período del reporte</p>
+
+            <?php
+            $opcionesPDF = [
+                'diario'  => ['Hoy',          'fas fa-calendar-day',  '#FFF7ED', '#F97316', date('d/m/Y')],
+                'semanal' => ['Esta semana',   'fas fa-calendar-week', '#EFF6FF', '#3B82F6', date('d/m/Y', strtotime('monday this week')) . ' — ' . date('d/m/Y', strtotime('sunday this week'))],
+                'mensual' => ['Este mes',      'fas fa-calendar-alt',  '#F0FDF4', '#10B981', date('F Y')],
+                'todo'    => ['Todas las ventas','fas fa-calendar',    '#F5F3FF', '#8B5CF6', 'Historial completo'],
+            ];
+            foreach ($opcionesPDF as $key => [$label, $icon, $bg, $color, $sub]):
+            ?>
+            <a href="exportar_pdf.php?periodo=<?= $key ?>&tab=<?= $tab ?>"
+               class="flex items-center gap-4 px-4 py-3.5 rounded-xl border no-underline transition-all group"
+               style="border-color:#F3D5B5;"
+               onmouseover="this.style.borderColor='<?= $color ?>';this.style.background='<?= $bg ?>';this.style.transform='translateX(3px)';"
+               onmouseout="this.style.borderColor='#F3D5B5';this.style.background='';this.style.transform='';">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                     style="background:<?= $bg ?>;">
+                    <i class="<?= $icon ?>" style="color:<?= $color ?>;font-size:16px;"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="font-black text-sm" style="color:#1C0A00;"><?= $label ?></p>
+                    <p class="text-xs font-semibold" style="color:#A87D5C;"><?= $sub ?></p>
+                </div>
+                <i class="fas fa-download text-xs" style="color:#A87D5C;"></i>
+            </a>
+            <?php endforeach; ?>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 pb-5">
+            <button onclick="cerrarModal('modal-exportar-pdf','modal-exportar-pdf-box')"
+                    class="w-full py-2.5 rounded-xl text-sm font-black transition-all"
+                    style="background:#FFF7ED;border:1.5px solid #F3D5B5;color:#6B4F3A;"
+                    onmouseover="this.style.background='#F3D5B5';" onmouseout="this.style.background='#FFF7ED';">
+                Cancelar
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+function abrirModalExportarPDF() {
+    abrirModal('modal-exportar-pdf', 'modal-exportar-pdf-box');
+}
+</script>

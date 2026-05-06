@@ -104,3 +104,46 @@
         &nbsp;·&nbsp; Hecho con ❤️ para panaderías colombianas &nbsp;·&nbsp; Todos los derechos reservados.
     </div>
 </footer>
+
+<?php require_once __DIR__ . '/chatbot.php'; ?>
+
+<script>
+// ── Funciones globales para modales ──
+function abrirModal(modalId, boxId) {
+    var modal = document.getElementById(modalId);
+    var box   = document.getElementById(boxId);
+    if (!modal || !box) return;
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    setTimeout(function() {
+        box.style.transform = 'scale(1) translateY(0)';
+        box.style.opacity   = '1';
+    }, 10);
+    // Cerrar con Escape
+    document.addEventListener('keydown', function escHandler(e) {
+        if (e.key === 'Escape') { cerrarModal(modalId, boxId); document.removeEventListener('keydown', escHandler); }
+    });
+    // Cerrar al hacer clic en el fondo
+    modal.addEventListener('click', function bgHandler(e) {
+        if (e.target === modal) { cerrarModal(modalId, boxId); modal.removeEventListener('click', bgHandler); }
+    });
+}
+
+function cerrarModal(modalId, boxId) {
+    var modal = document.getElementById(modalId);
+    var box   = document.getElementById(boxId);
+    if (!modal || !box) return;
+    box.style.transform = 'scale(0.92) translateY(16px)';
+    box.style.opacity   = '0';
+    setTimeout(function() {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }, 220);
+}
+</script>
+
+        </main>
+    </div>
+</div>
+</body>
+</html>

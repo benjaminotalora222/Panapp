@@ -81,13 +81,13 @@ require_once __DIR__ . '/../layouts/header.php';
             Control de <span style="color:#F97316;">Inventario</span>
         </h2>
         <?php if (strtoupper($usuario['rol']) === 'ADMIN'): ?>
-        <a href="ajuste.php"
-           class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black text-white transition-all no-underline"
+        <button type="button" onclick="abrirModalAjuste()"
+           class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black text-white transition-all"
            style="background:#F97316;box-shadow:0 4px 12px rgba(249,115,22,0.3);"
-           onmouseover="this.style.background='#EA6A0A';"
-           onmouseout="this.style.background='#F97316';">
+           onmouseover="this.style.background='#EA6A0A';this.style.transform='translateY(-1px)';"
+           onmouseout="this.style.background='#F97316';this.style.transform='';">
             <i class="fas fa-plus"></i> Ajustar Stock
-        </a>
+        </button>
         <?php endif; ?>
     </div>
 
@@ -181,14 +181,15 @@ require_once __DIR__ . '/../layouts/header.php';
 
                     <?php if (strtoupper($usuario['rol']) === 'ADMIN'): ?>
                     <td class="px-5 py-3 text-center">
-                        <a href="ajuste.php?id=<?= $item['id_insumo'] ?>"
+                        <button type="button"
+                           onclick="abrirModalAjuste(<?= $item['id_insumo'] ?>, '<?= htmlspecialchars(addslashes($item['insumo'])) ?>', <?= $item['cantidad_actual'] ?>)"
                            class="w-8 h-8 rounded-lg border flex items-center justify-center text-sm transition-all mx-auto"
                            style="border-color:#F3D5B5;color:#6B4F3A;"
                            onmouseover="this.style.background='#FFF7ED';this.style.borderColor='#F97316';this.style.color='#F97316';"
                            onmouseout="this.style.background='';this.style.borderColor='#F3D5B5';this.style.color='#6B4F3A';"
                            title="Ajustar stock">
                             <i class="fas fa-edit"></i>
-                        </a>
+                        </button>
                     </td>
                     <?php endif; ?>
 
@@ -201,3 +202,181 @@ require_once __DIR__ . '/../layouts/header.php';
 </div>
 
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>
+
+<!-- ══ MODAL AJUSTAR STOCK ══ -->
+<div id="modal-ajuste" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+     style="background:rgba(28,10,0,0.45);backdrop-filter:blur(4px);display:none!important;">
+    <div id="modal-ajuste-box" class="bg-white rounded-2xl w-full shadow-2xl"
+         style="max-width:500px;border:1px solid #F3D5B5;transform:scale(0.92) translateY(16px);opacity:0;transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1),opacity 0.2s ease;">
+
+        <div class="flex items-center justify-between px-6 py-5 border-b" style="border-color:#F3D5B5;">
+            <div>
+                <h3 class="text-lg font-black" style="color:#1C0A00;">Ajustar <span style="color:#F97316;">Stock</span></h3>
+                <p class="text-xs font-semibold mt-0.5" style="color:#A87D5C;">Registra entradas o salidas de inventario</p>
+            </div>
+            <button onclick="cerrarModal('modal-ajuste','modal-ajuste-box')"
+                    class="w-8 h-8 rounded-xl flex items-center justify-center text-sm transition-all"
+                    style="background:#FFF7ED;border:1px solid #F3D5B5;color:#A87D5C;"
+                    onmouseover="this.style.background='#FEE2E2';this.style.color='#DC2626';"
+                    onmouseout="this.style.background='#FFF7ED';this.style.color='#A87D5C';">✕</button>
+        </div>
+
+        <form id="form-ajuste" class="px-6 py-5 flex flex-col gap-4">
+
+            <!-- Insumo -->
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-black uppercase tracking-wider" style="color:#6B4F3A;">Insumo <span style="color:#F97316;">*</span></label>
+                <div class="relative">
+                    <i class="fas fa-seedling absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:#A87D5C;"></i>
+                    <select name="id_insumo" id="modal-ajuste-insumo" required
+                            class="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm font-semibold outline-none appearance-none"
+                            style="background:#FFF7ED;border:1.5px solid #F3D5B5;color:#1C0A00;"
+                            onfocus="this.style.borderColor='#F97316';" onblur="this.style.borderColor='#F3D5B5';"
+                            onchange="actualizarStockInfo(this.value)">
+                        <option value="">-- Selecciona un insumo --</option>
+                        <?php
+                        $stmtInvModal = $db->prepare("
+                            SELECT i.id_insumo, i.nombre, i.unidad_medida,
+                                   COALESCE(ii.cantidad_actual, 0) as cantidad_actual
+                            FROM insumos i
+                            LEFT JOIN inventario_insumos ii ON i.id_insumo = ii.id_insumo
+                            ORDER BY i.nombre ASC
+                        ");
+                        $stmtInvModal->execute();
+                        $insumosModal = $stmtInvModal->fetchAll(PDO::FETCH_ASSOC);
+                        foreach ($insumosModal as $ins):
+                        ?>
+                        <option value="<?= $ins['id_insumo'] ?>"
+                                data-stock="<?= $ins['cantidad_actual'] ?>"
+                                data-unidad="<?= htmlspecialchars($ins['unidad_medida']) ?>">
+                            <?= htmlspecialchars($ins['nombre']) ?> (<?= htmlspecialchars($ins['unidad_medida']) ?>)
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Stock actual (dinámico) -->
+            <div id="stock-info" class="hidden flex items-center gap-3 px-4 py-3 rounded-xl" style="background:#FFF7ED;border:1.5px solid #F3D5B5;">
+                <span class="text-xl">📦</span>
+                <div>
+                    <p class="text-xs font-black uppercase tracking-wider" style="color:#A87D5C;">Stock actual</p>
+                    <p class="text-xl font-black" style="color:#1C0A00;">
+                        <span id="stock-cantidad">0</span>
+                        <span class="text-sm font-semibold" style="color:#A87D5C;" id="stock-unidad"></span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Tipo -->
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-black uppercase tracking-wider" style="color:#6B4F3A;">Tipo de Movimiento <span style="color:#F97316;">*</span></label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer border transition-all"
+                           style="border-color:#F3D5B5;"
+                           onmouseover="this.style.borderColor='#10B981';this.style.background='#F0FDF4';"
+                           onmouseout="this.style.borderColor='#F3D5B5';this.style.background='';">
+                        <input type="radio" name="tipo" value="entrada" required style="accent-color:#10B981;">
+                        <div>
+                            <p class="text-sm font-black" style="color:#065F46;">📥 Entrada</p>
+                            <p class="text-xs font-semibold" style="color:#A87D5C;">Suma al stock</p>
+                        </div>
+                    </label>
+                    <label class="flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer border transition-all"
+                           style="border-color:#F3D5B5;"
+                           onmouseover="this.style.borderColor='#EF4444';this.style.background='#FEF2F2';"
+                           onmouseout="this.style.borderColor='#F3D5B5';this.style.background='';">
+                        <input type="radio" name="tipo" value="salida" style="accent-color:#EF4444;">
+                        <div>
+                            <p class="text-sm font-black" style="color:#991B1B;">📤 Salida</p>
+                            <p class="text-xs font-semibold" style="color:#A87D5C;">Resta del stock</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Cantidad y Motivo -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-black uppercase tracking-wider" style="color:#6B4F3A;">Cantidad <span style="color:#F97316;">*</span></label>
+                    <div class="relative">
+                        <i class="fas fa-hashtag absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:#A87D5C;"></i>
+                        <input type="number" name="cantidad" required min="1" placeholder="Ej. 10"
+                               class="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm font-semibold outline-none transition-all"
+                               style="background:#FFF7ED;border:1.5px solid #F3D5B5;color:#1C0A00;"
+                               onfocus="this.style.borderColor='#F97316';this.style.background='#fff';"
+                               onblur="this.style.borderColor='#F3D5B5';this.style.background='#FFF7ED';">
+                    </div>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-black uppercase tracking-wider" style="color:#6B4F3A;">Motivo <span class="font-semibold normal-case" style="color:#A87D5C;">(opcional)</span></label>
+                    <input type="text" name="motivo" maxlength="255" placeholder="Ej. Compra a proveedor"
+                           class="w-full px-3 py-2.5 rounded-xl text-sm font-semibold outline-none transition-all"
+                           style="background:#FFF7ED;border:1.5px solid #F3D5B5;color:#1C0A00;"
+                           onfocus="this.style.borderColor='#F97316';this.style.background='#fff';"
+                           onblur="this.style.borderColor='#F3D5B5';this.style.background='#FFF7ED';">
+                </div>
+            </div>
+
+            <div id="error-ajuste" class="hidden px-4 py-3 rounded-xl text-sm font-bold"
+                 style="background:#FEE2E2;color:#991B1B;border:1px solid #FCA5A5;"></div>
+
+            <div class="flex gap-3 pt-1">
+                <button type="submit" id="btn-ajuste"
+                        class="flex-1 py-2.5 rounded-xl text-sm font-black text-white flex items-center justify-center gap-2"
+                        style="background:#F97316;box-shadow:0 4px 14px rgba(249,115,22,0.3);"
+                        onmouseover="this.style.background='#EA6A0A';" onmouseout="this.style.background='#F97316';">
+                    <i class="fas fa-save"></i> <span id="btn-ajuste-txt">Guardar Ajuste</span>
+                </button>
+                <button type="button" onclick="cerrarModal('modal-ajuste','modal-ajuste-box')"
+                        class="px-5 py-2.5 rounded-xl text-sm font-black transition-all"
+                        style="background:#FFF7ED;border:1.5px solid #F3D5B5;color:#6B4F3A;"
+                        onmouseover="this.style.background='#F3D5B5';" onmouseout="this.style.background='#FFF7ED';">
+                    Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function abrirModalAjuste(idInsumo, nombreInsumo, stockActual) {
+    abrirModal('modal-ajuste','modal-ajuste-box');
+    document.getElementById('form-ajuste').reset();
+    document.getElementById('error-ajuste').classList.add('hidden');
+    document.getElementById('stock-info').classList.add('hidden');
+    if (idInsumo) {
+        var sel = document.getElementById('modal-ajuste-insumo');
+        sel.value = idInsumo;
+        actualizarStockInfo(idInsumo);
+    }
+}
+
+function actualizarStockInfo(idInsumo) {
+    var sel = document.getElementById('modal-ajuste-insumo');
+    var opt = sel.options[sel.selectedIndex];
+    var info = document.getElementById('stock-info');
+    if (idInsumo && opt) {
+        document.getElementById('stock-cantidad').textContent = opt.dataset.stock || '0';
+        document.getElementById('stock-unidad').textContent   = opt.dataset.unidad || '';
+        info.classList.remove('hidden');
+    } else {
+        info.classList.add('hidden');
+    }
+}
+
+document.getElementById('form-ajuste').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var btn = document.getElementById('btn-ajuste');
+    var txt = document.getElementById('btn-ajuste-txt');
+    var err = document.getElementById('error-ajuste');
+    btn.disabled = true; txt.textContent = 'Guardando...'; btn.style.opacity = '0.75';
+    fetch('/PanApp/controllers/InventarioController.php?accion=ajustar', { method:'POST', body: new FormData(this) })
+    .then(function() {
+        Swal.fire({ icon:'success', title:'¡Ajuste registrado!', text:'El stock fue actualizado correctamente.', confirmButtonColor:'#F97316' })
+        .then(function() { window.location.reload(); });
+    })
+    .catch(function() { err.textContent = '⚠️ Error de conexión.'; err.classList.remove('hidden'); })
+    .finally(function() { btn.disabled = false; txt.textContent = 'Guardar Ajuste'; btn.style.opacity = '1'; });
+});
+</script>

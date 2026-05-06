@@ -116,13 +116,13 @@ require_once __DIR__ . '/../layouts/header.php';
         <?php endforeach; ?>
     </div>
 
-    <a href="crear.php"
-       class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black text-white transition-all no-underline"
+    <button type="button" onclick="abrirModalVenta()"
+       class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-black text-white transition-all"
        style="background:#F97316;box-shadow:0 4px 12px rgba(249,115,22,0.3);"
-       onmouseover="this.style.background='#EA6A0A';"
-       onmouseout="this.style.background='#F97316';">
+       onmouseover="this.style.background='#EA6A0A';this.style.transform='translateY(-1px)';"
+       onmouseout="this.style.background='#F97316';this.style.transform='';">
         <i class="fas fa-plus"></i> Nueva Venta
-    </a>
+    </button>
 </div>
 
 <!-- Ventas agrupadas por día -->
@@ -243,3 +243,379 @@ require_once __DIR__ . '/../layouts/header.php';
 <?php endif; ?>
 
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>
+
+<!-- ══════════════════════════════
+     MODAL NUEVA VENTA
+══════════════════════════════ -->
+<?php
+// Cargar productos y métodos de pago para el modal
+$stmtProd = $db->prepare("SELECT id_producto, nombre, precio, categoria, unidad_medida FROM productos ORDER BY categoria, nombre");
+$stmtProd->execute();
+$productosModal = $stmtProd->fetchAll(PDO::FETCH_ASSOC);
+
+$stmtPago = $db->prepare("SELECT id_metodo_pago, nombre FROM metodos_pago ORDER BY nombre");
+$stmtPago->execute();
+$metodosPagoModal = $stmtPago->fetchAll(PDO::FETCH_ASSOC);
+?>
+
+<style>
+    #modal-venta-box {
+        max-width: 900px;
+        width: 100%;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+    }
+    .mv-productos-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 10px;
+    }
+    .mv-prod-card {
+        border: 1.5px solid #F3D5B5;
+        border-radius: 12px;
+        padding: 12px;
+        cursor: pointer;
+        transition: border-color 0.15s, background 0.15s, transform 0.1s;
+        user-select: none;
+    }
+    .mv-prod-card:hover {
+        border-color: #F97316;
+        background: #FFF7ED;
+        transform: translateY(-2px);
+    }
+    .mv-prod-card.en-carrito {
+        border-color: #F97316;
+        background: #FFF7ED;
+    }
+    #mv-carrito-items {
+        max-height: 260px;
+        overflow-y: auto;
+    }
+    #mv-carrito-items::-webkit-scrollbar { width: 3px; }
+    #mv-carrito-items::-webkit-scrollbar-thumb { background: #F3D5B5; border-radius: 3px; }
+    #mv-productos-scroll {
+        max-height: 340px;
+        overflow-y: auto;
+        padding-right: 4px;
+    }
+    #mv-productos-scroll::-webkit-scrollbar { width: 3px; }
+    #mv-productos-scroll::-webkit-scrollbar-thumb { background: #F3D5B5; border-radius: 3px; }
+</style>
+
+<div id="modal-venta" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+     style="background:rgba(28,10,0,0.5);backdrop-filter:blur(4px);display:none!important;">
+    <div id="modal-venta-box" class="bg-white rounded-2xl shadow-2xl overflow-hidden"
+         style="border:1px solid #F3D5B5;transform:scale(0.92) translateY(16px);opacity:0;transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1),opacity 0.2s ease;">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-4 flex-shrink-0"
+             style="background:linear-gradient(135deg,#F97316,#EA6A0A);">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
+                     style="background:rgba(255,255,255,0.2);">🛒</div>
+                <div>
+                    <h3 class="text-base font-black text-white">Nueva Venta</h3>
+                    <p class="text-xs font-semibold" style="color:rgba(255,255,255,0.8);">
+                        Selecciona productos y registra el cobro
+                    </p>
+                </div>
+            </div>
+            <button onclick="cerrarModalVenta()"
+                    class="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black text-white transition-all"
+                    style="background:rgba(255,255,255,0.15);"
+                    onmouseover="this.style.background='rgba(255,255,255,0.25)';"
+                    onmouseout="this.style.background='rgba(255,255,255,0.15)';">✕</button>
+        </div>
+
+        <!-- Body: 2 columnas -->
+        <div class="flex flex-1 overflow-hidden" style="min-height:0;">
+
+            <!-- Columna izquierda: Productos -->
+            <div class="flex-1 flex flex-col border-r overflow-hidden" style="border-color:#F3D5B5;">
+                <!-- Buscador -->
+                <div class="px-5 py-3 border-b flex-shrink-0" style="border-color:#F3D5B5;background:#FDFAF7;">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:#A87D5C;"></i>
+                        <input type="text" id="mv-buscador" placeholder="Buscar producto..."
+                               class="w-full pl-8 pr-3 py-2 rounded-xl text-sm font-semibold outline-none"
+                               style="background:#FFF7ED;border:1.5px solid #F3D5B5;color:#1C0A00;"
+                               onfocus="this.style.borderColor='#F97316';this.style.background='#fff';"
+                               onblur="this.style.borderColor='#F3D5B5';this.style.background='#FFF7ED';"
+                               oninput="mvFiltrar(this.value)">
+                    </div>
+                </div>
+                <!-- Grid productos -->
+                <div id="mv-productos-scroll" class="p-4 flex-1">
+                    <?php if (empty($productosModal)): ?>
+                    <p class="text-center text-sm font-bold py-8" style="color:#A87D5C;">🍞 No hay productos registrados.</p>
+                    <?php else: ?>
+                    <div class="mv-productos-grid" id="mv-grid">
+                        <?php foreach ($productosModal as $p): ?>
+                        <div class="mv-prod-card"
+                             data-id="<?= $p['id_producto'] ?>"
+                             data-nombre="<?= htmlspecialchars($p['nombre']) ?>"
+                             data-precio="<?= $p['precio'] ?>"
+                             data-cat="<?= htmlspecialchars(strtolower($p['categoria'] ?? '')) ?>"
+                             onclick="mvAgregar(this)">
+                            <p class="font-black text-xs leading-tight mb-1" style="color:#1C0A00;">
+                                <?= htmlspecialchars($p['nombre']) ?>
+                            </p>
+                            <p class="text-xs font-semibold" style="color:#A87D5C;">
+                                <?= htmlspecialchars($p['categoria'] ?? '—') ?>
+                            </p>
+                            <p class="font-black text-sm mt-2" style="color:#F97316;">
+                                $<?= number_format($p['precio'], 0, ',', '.') ?>
+                            </p>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Columna derecha: Carrito + pago -->
+            <div class="flex flex-col flex-shrink-0" style="width:280px;">
+
+                <!-- Carrito header -->
+                <div class="px-4 py-3 border-b flex-shrink-0 flex items-center justify-between"
+                     style="border-color:#F3D5B5;background:#FDFAF7;">
+                    <span class="text-sm font-black" style="color:#1C0A00;">🧾 Carrito</span>
+                    <button onclick="mvLimpiarCarrito()"
+                            class="text-xs font-black px-2.5 py-1 rounded-lg transition-all"
+                            style="background:#FEE2E2;color:#DC2626;border:1px solid #FCA5A5;"
+                            onmouseover="this.style.background='#FECACA';"
+                            onmouseout="this.style.background='#FEE2E2';">
+                        Limpiar
+                    </button>
+                </div>
+
+                <!-- Items del carrito -->
+                <div id="mv-carrito-items" class="flex-1 px-4 py-3">
+                    <p id="mv-empty" class="text-xs font-bold text-center py-6" style="color:#A87D5C;">
+                        Selecciona productos del catálogo
+                    </p>
+                </div>
+
+                <!-- Total + método + botón -->
+                <div class="px-4 py-4 border-t flex-shrink-0" style="border-color:#F3D5B5;background:#FDFAF7;">
+
+                    <!-- Total -->
+                    <div class="flex items-center justify-between mb-3 pb-3 border-b" style="border-color:#F3D5B5;">
+                        <span class="text-xs font-black uppercase tracking-wider" style="color:#6B4F3A;">Total</span>
+                        <span class="text-xl font-black" style="color:#F97316;" id="mv-total">$0</span>
+                    </div>
+
+                    <!-- Método de pago -->
+                    <div class="mb-3">
+                        <label class="text-xs font-black uppercase tracking-wider block mb-1.5" style="color:#6B4F3A;">
+                            Método de Pago
+                        </label>
+                        <div class="relative">
+                            <i class="fas fa-credit-card absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:#A87D5C;"></i>
+                            <select id="mv-metodo"
+                                    class="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm font-semibold outline-none appearance-none"
+                                    style="background:#FFF7ED;border:1.5px solid #F3D5B5;color:#1C0A00;"
+                                    onfocus="this.style.borderColor='#F97316';"
+                                    onblur="this.style.borderColor='#F3D5B5';">
+                                <option value="">-- Selecciona --</option>
+                                <?php foreach ($metodosPagoModal as $mp): ?>
+                                <option value="<?= $mp['id_metodo_pago'] ?>"><?= htmlspecialchars($mp['nombre']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Botón registrar -->
+                    <button onclick="mvConfirmar()"
+                            class="w-full py-2.5 rounded-xl text-sm font-black text-white transition-all flex items-center justify-center gap-2"
+                            style="background:#F97316;box-shadow:0 4px 14px rgba(249,115,22,0.35);"
+                            onmouseover="this.style.background='#EA6A0A';"
+                            onmouseout="this.style.background='#F97316';">
+                        <i class="fas fa-check"></i> Registrar Venta
+                    </button>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Form oculto para enviar -->
+<form id="mv-form" action="/PanApp/controllers/VentaController.php" method="POST" style="display:none;">
+    <input type="hidden" name="id_metodo_pago" id="mv-input-metodo">
+    <input type="hidden" name="total"          id="mv-input-total">
+    <input type="hidden" name="items"          id="mv-input-items">
+</form>
+
+<script>
+(function() {
+    var carrito = {};
+
+    // ── Abrir / cerrar ──
+    window.abrirModalVenta = function() {
+        var modal = document.getElementById('modal-venta');
+        var box   = document.getElementById('modal-venta-box');
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        setTimeout(function() {
+            box.style.transform = 'scale(1) translateY(0)';
+            box.style.opacity   = '1';
+        }, 10);
+        // Limpiar al abrir
+        carrito = {};
+        mvRenderCarrito();
+        document.getElementById('mv-buscador').value = '';
+        mvFiltrar('');
+        document.getElementById('mv-metodo').value = '';
+    };
+
+    window.cerrarModalVenta = function() {
+        var modal = document.getElementById('modal-venta');
+        var box   = document.getElementById('modal-venta-box');
+        box.style.transform = 'scale(0.92) translateY(16px)';
+        box.style.opacity   = '0';
+        setTimeout(function() {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }, 220);
+    };
+
+    // Cerrar con Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && document.getElementById('modal-venta').style.display === 'flex') {
+            cerrarModalVenta();
+        }
+    });
+
+    // ── Agregar producto ──
+    window.mvAgregar = function(el) {
+        var id     = el.dataset.id;
+        var nombre = el.dataset.nombre;
+        var precio = parseFloat(el.dataset.precio);
+        if (carrito[id]) {
+            carrito[id].cantidad++;
+        } else {
+            carrito[id] = { nombre: nombre, precio: precio, cantidad: 1 };
+        }
+        el.classList.add('en-carrito');
+        mvRenderCarrito();
+    };
+
+    // ── Cambiar cantidad ──
+    window.mvCambiarCantidad = function(id, delta) {
+        if (!carrito[id]) return;
+        carrito[id].cantidad += delta;
+        if (carrito[id].cantidad <= 0) {
+            delete carrito[id];
+            // Quitar clase en-carrito de la card
+            var card = document.querySelector('.mv-prod-card[data-id="' + id + '"]');
+            if (card) card.classList.remove('en-carrito');
+        }
+        mvRenderCarrito();
+    };
+
+    // ── Limpiar carrito ──
+    window.mvLimpiarCarrito = function() {
+        carrito = {};
+        document.querySelectorAll('.mv-prod-card').forEach(function(c) { c.classList.remove('en-carrito'); });
+        mvRenderCarrito();
+    };
+
+    // ── Render carrito ──
+    function mvRenderCarrito() {
+        var container = document.getElementById('mv-carrito-items');
+        var emptyMsg  = document.getElementById('mv-empty');
+        var totalEl   = document.getElementById('mv-total');
+        var keys      = Object.keys(carrito);
+
+        if (keys.length === 0) {
+            container.innerHTML = '<p id="mv-empty" class="text-xs font-bold text-center py-6" style="color:#A87D5C;">Selecciona productos del catálogo</p>';
+            totalEl.textContent = '$0';
+            return;
+        }
+
+        var html  = '';
+        var total = 0;
+
+        keys.forEach(function(id) {
+            var item     = carrito[id];
+            var subtotal = item.precio * item.cantidad;
+            total += subtotal;
+            html += '<div class="flex items-center gap-2 py-2 border-b" style="border-color:#F3D5B5;">' +
+                '<div class="flex-1 min-w-0">' +
+                    '<p class="text-xs font-black truncate" style="color:#1C0A00;">' + item.nombre + '</p>' +
+                    '<p class="text-xs font-semibold" style="color:#A87D5C;">$' + mvFmt(item.precio) + ' c/u</p>' +
+                '</div>' +
+                '<div class="flex items-center gap-1">' +
+                    '<button onclick="mvCambiarCantidad(\'' + id + '\',-1)" class="w-5 h-5 rounded text-xs font-black flex items-center justify-center border" style="border-color:#F3D5B5;color:#DC2626;" onmouseover="this.style.background=\'#FEE2E2\';" onmouseout="this.style.background=\'\';">−</button>' +
+                    '<span class="w-5 text-center text-xs font-black" style="color:#1C0A00;">' + item.cantidad + '</span>' +
+                    '<button onclick="mvCambiarCantidad(\'' + id + '\',1)" class="w-5 h-5 rounded text-xs font-black flex items-center justify-center border" style="border-color:#F3D5B5;color:#F97316;" onmouseover="this.style.background=\'#FFF7ED\';" onmouseout="this.style.background=\'\';">+</button>' +
+                '</div>' +
+                '<p class="text-xs font-black" style="color:#F97316;min-width:52px;text-align:right;">$' + mvFmt(subtotal) + '</p>' +
+            '</div>';
+        });
+
+        container.innerHTML = html;
+        totalEl.textContent = '$' + mvFmt(total);
+    }
+
+    // ── Filtrar productos ──
+    window.mvFiltrar = function(q) {
+        q = q.toLowerCase();
+        document.querySelectorAll('.mv-prod-card').forEach(function(card) {
+            var nombre = card.dataset.nombre.toLowerCase();
+            var cat    = card.dataset.cat || '';
+            card.style.display = (!q || nombre.includes(q) || cat.includes(q)) ? '' : 'none';
+        });
+    };
+
+    // ── Confirmar venta ──
+    window.mvConfirmar = function() {
+        var keys = Object.keys(carrito);
+        if (keys.length === 0) {
+            Swal.fire({ icon:'warning', title:'Carrito vacío', text:'Agrega al menos un producto.', confirmButtonColor:'#F97316' });
+            return;
+        }
+        var metodo = document.getElementById('mv-metodo').value;
+        if (!metodo) {
+            Swal.fire({ icon:'warning', title:'Método de pago', text:'Selecciona un método de pago.', confirmButtonColor:'#F97316' });
+            return;
+        }
+
+        var total = 0;
+        keys.forEach(function(id) { total += carrito[id].precio * carrito[id].cantidad; });
+
+        var items = keys.map(function(id) {
+            return {
+                id_producto:     id,
+                cantidad:        carrito[id].cantidad,
+                precio_unitario: carrito[id].precio,
+                subtotal:        carrito[id].precio * carrito[id].cantidad
+            };
+        });
+
+        Swal.fire({
+            icon: 'question',
+            title: '¿Confirmar venta?',
+            html: '<strong style="color:#F97316;font-size:1.3rem;">$' + mvFmt(total) + '</strong><br><span style="color:#6B4F3A;font-size:0.85rem;">' + keys.length + ' producto(s)</span>',
+            showCancelButton: true,
+            confirmButtonText: '✅ Registrar',
+            cancelButtonText:  'Cancelar',
+            confirmButtonColor: '#F97316'
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                document.getElementById('mv-input-metodo').value = metodo;
+                document.getElementById('mv-input-total').value  = total;
+                document.getElementById('mv-input-items').value  = JSON.stringify(items);
+                document.getElementById('mv-form').submit();
+            }
+        });
+    };
+
+    function mvFmt(n) {
+        return new Intl.NumberFormat('es-CO').format(n);
+    }
+})();
+</script>

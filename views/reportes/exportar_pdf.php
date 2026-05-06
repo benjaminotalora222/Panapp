@@ -23,6 +23,11 @@ switch ($periodo) {
         $fechaHasta   = date('Y-m-t');
         $labelPeriodo = 'Mensual — ' . date('F Y');
         break;
+    case 'todo':
+        $fechaDesde   = '2000-01-01';
+        $fechaHasta   = date('Y-m-d');
+        $labelPeriodo = 'Todas las ventas (historial completo)';
+        break;
     default:
         $fechaDesde   = date('Y-m-d');
         $fechaHasta   = date('Y-m-d');
