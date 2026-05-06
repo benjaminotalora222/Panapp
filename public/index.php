@@ -450,6 +450,8 @@
             border-radius: 20px;
             border: 1.5px solid var(--border);
             transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+            cursor: default;
+            user-select: none;
         }
         .feature-item:hover {
             border-color: var(--orange-light);
@@ -923,7 +925,7 @@
         </div>
 
         <div class="cards-grid">
-            <a href="views/ventas/index.php" class="card reveal" style="transition-delay:0.05s">
+            <a href="/PanApp/views/usuarios/login.php" class="card reveal" style="transition-delay:0.05s">
                 <div class="card-icon-wrap" style="background:#FFF7ED;">🛒</div>
                 <h3>Registrar venta</h3>
                 <p>Agrega productos al carrito y cobra rápido con un flujo sin fricciones.</p>
@@ -933,7 +935,7 @@
                 </div>
             </a>
 
-            <a href="views/inventario/index.php" class="card reveal" style="transition-delay:0.12s">
+            <a href="/PanApp/views/usuarios/login.php" class="card reveal" style="transition-delay:0.12s">
                 <div class="card-icon-wrap" style="background:#F0FDF4;">📦</div>
                 <h3>Inventario</h3>
                 <p>Consulta el stock disponible, actualiza cantidades y evita quiebres.</p>
@@ -943,7 +945,7 @@
                 </div>
             </a>
 
-            <a href="views/reportes/index.php" class="card reveal" style="transition-delay:0.19s">
+            <a href="/PanApp/views/usuarios/login.php" class="card reveal" style="transition-delay:0.19s">
                 <div class="card-icon-wrap" style="background:#EFF6FF;">📊</div>
                 <h3>Reportes</h3>
                 <p>Ventas diarias, semanales y mensuales con gráficas y exportación.</p>
@@ -953,7 +955,7 @@
                 </div>
             </a>
 
-            <a href="views/usuarios/index.php" class="card reveal" style="transition-delay:0.26s">
+            <a href="/PanApp/views/usuarios/login.php" class="card reveal" style="transition-delay:0.26s">
                 <div class="card-icon-wrap" style="background:#FDF4FF;">👥</div>
                 <h3>Usuarios</h3>
                 <p>Gestiona empleados y administradores, controla permisos y accesos.</p>
@@ -1025,6 +1027,10 @@
     </footer>
 
     <script>
+        // Prevenir modo edición accidental
+        document.designMode = 'off';
+        document.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+
         // ── Barra de progreso al cargar ──
         var loader = document.getElementById('page-loader');
         var progress = 0;

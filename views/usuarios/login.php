@@ -284,7 +284,7 @@ unset($_SESSION['alert']);
             <div class="footer-link">
                 ¿No tienes cuenta? <a href="registre.php">Regístrate aquí</a>
             </div>
-            <a href="../../index.php" class="back-link">
+            <a href="/PanApp/public/index.php" class="back-link">
                 <i class="fas fa-arrow-left"></i> Volver al inicio
             </a>
 
