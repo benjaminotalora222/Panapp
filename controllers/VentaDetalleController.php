@@ -13,7 +13,7 @@ require_once __DIR__ . '/../config/database.php';
 $db = (new Database())->conectar();
 
 $stmtV = $db->prepare("
-    SELECT v.id_venta, v.fecha, v.total, v.estado,
+    SELECT v.id_venta, v.fecha, v.total, v.estado, v.id_usuario,
            mp.nombre AS metodo_pago,
            u.nombres, u.apellidos
     FROM ventas v

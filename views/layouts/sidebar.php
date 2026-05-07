@@ -9,6 +9,29 @@ function sidebarLink(string $page, string $titulo): array {
         'icolor' => $active ? '#F97316' : '#A87D5C',
     ];
 }
+
+// ── Consultar insumos con stock bajo (solo Admin) ──
+$stockBajoItems = [];
+$totalStockBajo = 0;
+if (strtoupper($usuario['rol']) === 'ADMIN') {
+    try {
+        require_once __DIR__ . '/../../config/database.php';
+        $dbSidebar = (new Database())->conectar();
+        $stmtSB = $dbSidebar->prepare("
+            SELECT i.nombre, ii.cantidad_actual, i.unidad_medida
+            FROM inventario_insumos ii
+            JOIN insumos i ON ii.id_insumo = i.id_insumo
+            WHERE ii.cantidad_actual <= 5
+            ORDER BY ii.cantidad_actual ASC
+            LIMIT 10
+        ");
+        $stmtSB->execute();
+        $stockBajoItems = $stmtSB->fetchAll(PDO::FETCH_ASSOC);
+        $totalStockBajo = count($stockBajoItems);
+    } catch (Exception $e) {
+        $totalStockBajo = 0;
+    }
+}
 ?>
 
 <style>
@@ -145,6 +168,21 @@ function sidebarLink(string $page, string $titulo): array {
         background: #F97316;
         color: #fff;
         letter-spacing: 0.3px;
+    }
+    .sb-badge-alert {
+        margin-left: auto;
+        font-size: 9px;
+        font-weight: 900;
+        padding: 2px 7px;
+        border-radius: 99px;
+        background: #EF4444;
+        color: #fff;
+        letter-spacing: 0.3px;
+        animation: pulseBadge 2s ease-in-out infinite;
+    }
+    @keyframes pulseBadge {
+        0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+        50%      { box-shadow: 0 0 0 4px rgba(239,68,68,0); }
     }
 
     /* Footer del sidebar */
@@ -317,6 +355,11 @@ function sidebarLink(string $page, string $titulo): array {
                 <i class="fas fa-boxes" style="color:<?= $l['icolor'] ?>;"></i>
             </span>
             Inventario
+            <?php if ($totalStockBajo > 0): ?>
+            <span class="sb-badge-alert" title="<?= $totalStockBajo ?> insumo<?= $totalStockBajo !== 1 ? 's' : '' ?> con stock bajo">
+                <?= $totalStockBajo ?>
+            </span>
+            <?php endif; ?>
         </a>
 
         <?php $l = sidebarLink('Productos', $titulo); ?>

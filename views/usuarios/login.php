@@ -271,7 +271,7 @@ unset($_SESSION['alert']);
                         <input type="checkbox" name="recordar">
                         Recordarme
                     </label>
-                    <a href="#" class="forgot">¿Olvidaste tu contraseña?</a>
+                    <a href="#" class="forgot" onclick="mostrarOlvidaste(event)">¿Olvidaste tu contraseña?</a>
                 </div>
 
                 <button type="submit" class="btn-submit">
@@ -283,7 +283,7 @@ unset($_SESSION['alert']);
             <div class="divider">o</div>
 
             <div class="footer-link">
-                ¿No tienes cuenta? <a href="registre.php">Regístrate aquí</a>
+                ¿No tienes cuenta? <a href="#" onclick="mostrarSinCuenta(event)">Regístrate aquí</a>
             </div>
             <a href="/PanApp/public/index.php" class="back-link">
                 <i class="fas fa-arrow-left"></i> Volver al inicio
@@ -303,6 +303,29 @@ unset($_SESSION['alert']);
                 input.type = 'password';
                 icon.classList.replace('fa-eye-slash', 'fa-eye');
             }
+        }
+
+        function mostrarOlvidaste(e) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'info',
+                title: '¿Olvidaste tu contraseña?',
+                html: '<p style="color:#6B4F3A;font-size:14px;line-height:1.6;">Para restablecer tu contraseña, contacta al <strong>Administrador</strong> del sistema.<br><br>El administrador puede cambiarla desde el módulo de <strong>Gestión de Usuarios</strong>.</p>',
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#F97316',
+                showClass: { popup: 'animate__animated animate__fadeInDown' }
+            });
+        }
+
+        function mostrarSinCuenta(e) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Registro no disponible',
+                html: '<p style="color:#6B4F3A;font-size:14px;line-height:1.6;">El registro de nuevos usuarios está <strong>restringido</strong>.<br><br>Solo el <strong>Administrador</strong> puede crear cuentas desde el panel de administración.</p>',
+                confirmButtonText: 'Entendido',
+                confirmButtonColor: '#F97316'
+            });
         }
     </script>
 

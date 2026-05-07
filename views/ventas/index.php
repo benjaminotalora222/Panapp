@@ -221,14 +221,15 @@ require_once __DIR__ . '/../layouts/header.php';
                     </td>
 
                     <td class="px-5 py-3 text-center">
-                        <a href="detalle.php?id=<?= $v['id_venta'] ?>"
+                        <button type="button"
+                           onclick="verDetalleVentaModal(<?= $v['id_venta'] ?>)"
                            class="w-8 h-8 rounded-lg border flex items-center justify-center text-sm transition-all mx-auto"
                            style="border-color:#F3D5B5;color:#6B4F3A;"
                            onmouseover="this.style.background='#FFF7ED';this.style.borderColor='#F97316';this.style.color='#F97316';"
                            onmouseout="this.style.background='';this.style.borderColor='#F3D5B5';this.style.color='#6B4F3A';"
                            title="Ver detalle">
                             <i class="fas fa-eye"></i>
-                        </a>
+                        </button>
                     </td>
 
                 </tr>
@@ -618,4 +619,165 @@ $metodosPagoModal = $stmtPago->fetchAll(PDO::FETCH_ASSOC);
         return new Intl.NumberFormat('es-CO').format(n);
     }
 })();
+</script>
+
+<!-- ══ MODAL DETALLE VENTA ══ -->
+<div id="modal-detalle-v" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+     style="background:rgba(28,10,0,0.45);backdrop-filter:blur(4px);display:none!important;">
+    <div id="modal-detalle-v-box" class="bg-white rounded-2xl w-full shadow-2xl"
+         style="max-width:520px;border:1px solid #F3D5B5;transform:scale(0.92) translateY(16px);opacity:0;transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1),opacity 0.2s ease;">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b" style="border-color:#F3D5B5;">
+            <div>
+                <h3 class="text-lg font-black" style="color:#1C0A00;">
+                    Venta <span style="color:#F97316;" id="mdv2-numero">#0000</span>
+                </h3>
+                <p class="text-xs font-semibold mt-0.5" style="color:#A87D5C;" id="mdv2-fecha">—</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <span id="mdv2-estado-badge" class="text-xs font-black px-3 py-1.5 rounded-full"></span>
+                <button onclick="cerrarModal('modal-detalle-v','modal-detalle-v-box')"
+                        class="w-8 h-8 rounded-xl flex items-center justify-center text-sm transition-all"
+                        style="background:#FFF7ED;border:1px solid #F3D5B5;color:#A87D5C;"
+                        onmouseover="this.style.background='#FEE2E2';this.style.color='#DC2626';"
+                        onmouseout="this.style.background='#FFF7ED';this.style.color='#A87D5C';">✕</button>
+            </div>
+        </div>
+
+        <!-- Info cajero + método -->
+        <div class="px-6 py-4 grid grid-cols-2 gap-4 border-b" style="border-color:#F3D5B5;">
+            <div>
+                <p class="text-xs font-black uppercase tracking-wider mb-1" style="color:#A87D5C;">Cajero</p>
+                <p class="text-sm font-black" style="color:#1C0A00;" id="mdv2-cajero">—</p>
+            </div>
+            <div>
+                <p class="text-xs font-black uppercase tracking-wider mb-1" style="color:#A87D5C;">Método de Pago</p>
+                <p class="text-sm font-black" style="color:#1C0A00;" id="mdv2-metodo">—</p>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="mdv2-loading" class="px-6 py-8 text-center">
+            <div class="inline-flex items-center gap-2" style="color:#A87D5C;">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span class="text-sm font-semibold">Cargando detalle...</span>
+            </div>
+        </div>
+
+        <!-- Productos -->
+        <div id="mdv2-productos" class="px-6 py-4 hidden">
+            <p class="text-xs font-black uppercase tracking-wider mb-3" style="color:#A87D5C;">Productos</p>
+            <div id="mdv2-lista" class="flex flex-col gap-0 max-h-52 overflow-y-auto"></div>
+            <div class="flex items-center justify-between pt-4 mt-2 border-t" style="border-color:#F3D5B5;">
+                <span class="font-black text-base" style="color:#6B4F3A;">TOTAL</span>
+                <span class="font-black text-2xl" style="color:#F97316;" id="mdv2-total">$0</span>
+            </div>
+        </div>
+
+        <!-- Botones -->
+        <div class="px-6 pb-5 flex gap-3">
+            <button onclick="cerrarModal('modal-detalle-v','modal-detalle-v-box')"
+                    class="flex-1 py-2.5 rounded-xl text-sm font-black transition-all"
+                    style="background:#FFF7ED;border:1.5px solid #F3D5B5;color:#6B4F3A;"
+                    onmouseover="this.style.background='#F3D5B5';" onmouseout="this.style.background='#FFF7ED';">
+                <i class="fas fa-times mr-1"></i> Cerrar
+            </button>
+            <button id="mdv2-btn-anular" onclick="anularVentaModal2()"
+                    class="flex-1 py-2.5 rounded-xl text-sm font-black transition-all hidden"
+                    style="background:#FEE2E2;border:1.5px solid #FCA5A5;color:#DC2626;"
+                    onmouseover="this.style.background='#FECACA';" onmouseout="this.style.background='#FEE2E2';">
+                <i class="fas fa-ban mr-1"></i> Anular Venta
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+var _ventaIdModal2 = null;
+
+function verDetalleVentaModal(id) {
+    _ventaIdModal2 = id;
+    abrirModal('modal-detalle-v', 'modal-detalle-v-box');
+
+    // Reset
+    document.getElementById('mdv2-numero').textContent = '#' + String(id).padStart(4,'0');
+    document.getElementById('mdv2-fecha').textContent  = '—';
+    document.getElementById('mdv2-cajero').textContent = '—';
+    document.getElementById('mdv2-metodo').textContent = '—';
+    document.getElementById('mdv2-total').textContent  = '$0';
+    document.getElementById('mdv2-lista').innerHTML    = '';
+    document.getElementById('mdv2-loading').classList.remove('hidden');
+    document.getElementById('mdv2-productos').classList.add('hidden');
+    document.getElementById('mdv2-btn-anular').classList.add('hidden');
+
+    fetch('/PanApp/controllers/VentaDetalleController.php?id=' + id)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.error) { alert(data.error); return; }
+        var v = data.venta, d = data.detalle;
+
+        document.getElementById('mdv2-numero').textContent = '#' + String(v.id_venta).padStart(4,'0');
+        document.getElementById('mdv2-fecha').textContent  = mdv2Fecha(v.fecha);
+        document.getElementById('mdv2-cajero').textContent = v.nombres + ' ' + v.apellidos;
+        document.getElementById('mdv2-metodo').textContent = v.metodo_pago || '—';
+
+        var badge = document.getElementById('mdv2-estado-badge');
+        if (v.estado === 'completada') {
+            badge.textContent = '✅ Completada';
+            badge.style.cssText = 'background:#D1FAE5;color:#065F46;border:1px solid #6EE7B7;';
+        } else if (v.estado === 'anulada') {
+            badge.textContent = '❌ Anulada';
+            badge.style.cssText = 'background:#FEE2E2;color:#991B1B;border:1px solid #FCA5A5;';
+        } else {
+            badge.textContent = '⏳ Pendiente';
+            badge.style.cssText = 'background:#FEF3C7;color:#92400E;border:1px solid #FCD34D;';
+        }
+
+        var lista = '';
+        d.forEach(function(item) {
+            lista += '<div class="flex items-center justify-between py-2.5 border-b" style="border-color:#F3D5B5;">' +
+                '<div><p class="text-sm font-black" style="color:#1C0A00;">' + item.nombre + '</p>' +
+                '<p class="text-xs font-semibold mt-0.5" style="color:#A87D5C;">' + item.cantidad + ' x $' + mdv2Fmt(item.precio_unitario) + '</p></div>' +
+                '<p class="font-black text-sm" style="color:#F97316;">$' + mdv2Fmt(item.subtotal) + '</p></div>';
+        });
+        document.getElementById('mdv2-lista').innerHTML = lista;
+        document.getElementById('mdv2-total').textContent = '$' + mdv2Fmt(v.total);
+
+        if (v.estado !== 'anulada') {
+            document.getElementById('mdv2-btn-anular').classList.remove('hidden');
+        }
+
+        document.getElementById('mdv2-loading').classList.add('hidden');
+        document.getElementById('mdv2-productos').classList.remove('hidden');
+    })
+    .catch(function() {
+        document.getElementById('mdv2-loading').innerHTML = '<p class="text-sm font-bold" style="color:#DC2626;">⚠️ Error al cargar el detalle.</p>';
+    });
+}
+
+function anularVentaModal2() {
+    if (!_ventaIdModal2) return;
+    Swal.fire({
+        icon: 'warning',
+        title: '¿Anular venta?',
+        html: 'La venta <strong>#' + String(_ventaIdModal2).padStart(4,'0') + '</strong> será anulada.',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, anular',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#DC2626'
+    }).then(function(r) {
+        if (r.isConfirmed) {
+            window.location.href = '/PanApp/controllers/VentaController.php?accion=anular&id=' + _ventaIdModal2;
+        }
+    });
+}
+
+function mdv2Fecha(str) {
+    var d = new Date(str.replace(' ','T'));
+    return d.toLocaleDateString('es-CO',{day:'2-digit',month:'2-digit',year:'numeric'}) + ' ' +
+           d.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
+}
+
+function mdv2Fmt(n) { return new Intl.NumberFormat('es-CO').format(n); }
 </script>

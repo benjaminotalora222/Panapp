@@ -48,7 +48,7 @@
                     </a>
                 </li>
                 <li>
-                    <a href="../../index.php" class="transition-colors duration-200"
+                    <a href="/PanApp/public/index.php" class="transition-colors duration-200"
                        style="color:#A87D5C;"
                        onmouseover="this.style.color='#F97316';"
                        onmouseout="this.style.color='#A87D5C';">
@@ -108,7 +108,27 @@
 <?php require_once __DIR__ . '/chatbot.php'; ?>
 
 <script>
-// ── Funciones globales para modales ──
+function toggleDark() {
+    var html = document.documentElement;
+    var icon = document.getElementById('dark-icon');
+    var isDark = html.getAttribute('data-dark') === '1';
+    if (isDark) {
+        html.removeAttribute('data-dark');
+        localStorage.setItem('panapp-dark', '0');
+        if (icon) { icon.classList.remove('fa-sun'); icon.classList.add('fa-moon'); }
+    } else {
+        html.setAttribute('data-dark', '1');
+        localStorage.setItem('panapp-dark', '1');
+        if (icon) { icon.classList.remove('fa-moon'); icon.classList.add('fa-sun'); }
+    }
+}
+(function() {
+    var icon = document.getElementById('dark-icon');
+    if (icon && localStorage.getItem('panapp-dark') === '1') {
+        icon.classList.remove('fa-moon'); icon.classList.add('fa-sun');
+    }
+})();
+
 function abrirModal(modalId, boxId) {
     var modal = document.getElementById(modalId);
     var box   = document.getElementById(boxId);
@@ -119,11 +139,9 @@ function abrirModal(modalId, boxId) {
         box.style.transform = 'scale(1) translateY(0)';
         box.style.opacity   = '1';
     }, 10);
-    // Cerrar con Escape
     document.addEventListener('keydown', function escHandler(e) {
         if (e.key === 'Escape') { cerrarModal(modalId, boxId); document.removeEventListener('keydown', escHandler); }
     });
-    // Cerrar al hacer clic en el fondo
     modal.addEventListener('click', function bgHandler(e) {
         if (e.target === modal) { cerrarModal(modalId, boxId); modal.removeEventListener('click', bgHandler); }
     });
@@ -144,6 +162,9 @@ function cerrarModal(modalId, boxId) {
 
         </main>
     </div>
+</div>
+</body>
+</html>
 </div>
 </body>
 </html>

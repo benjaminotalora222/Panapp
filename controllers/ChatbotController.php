@@ -25,132 +25,136 @@ $GEMINI_API_KEY = 'AIzaSyD_Bjn5vr-T_kc5tc-zRrhO7y221ndcFCk';
 $rol    = strtoupper($_SESSION['usuario']['rol']);
 $nombre = explode(' ', $_SESSION['usuario']['nombres'] ?? 'Usuario')[0];
 
-// ── Contexto completo del sistema ──
-$systemContext = "Eres PanBot, el asistente virtual inteligente de PanApp, un sistema de gestión para panaderías colombianas.
-El usuario se llama {$nombre} y tiene el rol: {$rol}.
+$systemContext = "Eres PanBot, el asistente virtual de PanApp, sistema de gestión para panaderías colombianas.
+Usuario: {$nombre}, Rol: {$rol}.
 
-MÓDULOS Y FUNCIONES DEL SISTEMA:
+MÓDULOS:
+1. VENTAS (Admin+Cajero): registrar venta > carrito > método de pago > confirmar. Ver historial con filtros. Anular desde detalle.
+2. INVENTARIO (Admin): ver stock, ajustar entradas/salidas. Alerta si stock ≤5.
+3. PRODUCTOS (Admin+Cajero): crear, editar, eliminar (Admin). Categorías: Pan,Pastel,Galleta,Torta,Bebida,Otro.
+4. PROVEEDORES (Admin): gestionar desde menú Proveedores.
+5. INSUMOS (Admin): gestionar desde menú Insumos, vinculados al inventario.
+6. REPORTES: ventas y productos, exportar PDF por período (hoy/semana/mes/todo).
+7. USUARIOS (Admin): crear, editar, activar/desactivar, eliminar desde menú Usuarios.
+8. DASHBOARD Admin: KPIs del día, actividad reciente, top productos, accesos rápidos.
 
-1. VENTAS (Admin y Cajero)
-   - Registrar venta: Ventas > Nueva Venta > agregar productos al carrito > seleccionar método de pago > Registrar Venta
-   - Ver historial: Ventas, filtros por Hoy / Esta semana / Este mes / Todas
-   - Ver detalle: ícono 👁️ en cada fila
-   - Anular venta: desde el detalle, botón Anular (cajero solo sus ventas, Admin cualquiera)
-   - Métodos de pago: Efectivo, Tarjeta, Transferencia
+REGLAS: Responde en español, amigable, con emojis 🥐, pasos numerados, máximo 5 oraciones. Usa **negritas**.";
 
-2. INVENTARIO (solo Admin)
-   - Ver stock: Inventario en el menú
-   - Estados: ✅ OK (>5), ⚠️ Stock bajo (≤5), 🔴 Sin stock (0)
-   - Ajustar stock: botón Ajustar Stock o ícono ✏️ en cada fila
-   - Tipos de ajuste: Entrada (suma) o Salida (resta)
-   - No se puede registrar salida sin stock suficiente
+// ── Modelos a intentar en orden ──
+$modelos = [
+    'gemini-1.5-flash',
+    'gemini-1.5-flash-latest',
+    'gemini-pro',
+    'gemini-1.0-pro',
+];
 
-3. PRODUCTOS (Admin y Cajero)
-   - Ver: Productos en el menú
-   - Crear: botón Agregar Producto > nombre, descripción, categoría, precio, unidad de medida
-   - Categorías: Pan, Pastel, Galleta, Torta, Bebida, Otro
-   - Unidades: Unidad, Docena, Libra, Kilo, Porción, Litro
-   - Editar: ícono ✏️ (todos los roles)
-   - Eliminar: ícono 🗑️ (solo Admin, no si tiene ventas asociadas)
-
-4. PROVEEDORES (solo Admin)
-   - Ver/Crear/Editar/Eliminar desde el menú Proveedores
-   - Campos: nombre, teléfono, correo, dirección, estado (activo/inactivo)
-
-5. INSUMOS (solo Admin)
-   - Ver/Crear/Editar/Eliminar desde el menú Insumos
-   - Campos: nombre, descripción, unidad de medida, proveedor (opcional)
-   - Se vinculan al inventario para controlar stock
-
-6. REPORTES
-   - Admin: Reportes generales (ventas y productos), exportar PDF
-   - Cajero: Reporte Ventas y Reporte Productos desde el menú
-
-7. USUARIOS (solo Admin)
-   - Ver y gestionar desde el Dashboard
-   - Crear: botón Nuevo Usuario > nombres, apellidos, correo, rol, contraseña (mín. 6 caracteres)
-   - Roles: Admin (acceso completo) o Cajero (acceso limitado)
-   - Editar, activar/desactivar, eliminar (no puedes eliminarte a ti mismo)
-
-8. DASHBOARD
-   - Admin: resumen de usuarios, gestión de usuarios, accesos rápidos a todos los módulos
-   - Cajero: ventas del día, ingresos, productos disponibles, últimas 5 ventas
-
-9. CERRAR SESIÓN
-   - Sidebar > parte inferior > ícono de salida (→)
-
-REGLAS IMPORTANTES:
-- Responde SIEMPRE en español
-- Sé amigable, conciso y usa emojis ocasionalmente 🥐
-- Si el usuario pregunta algo que no puede hacer por su rol ({$rol}), indícaselo amablemente
-- Da pasos numerados cuando expliques cómo hacer algo
-- No inventes funciones que no existen en el sistema
-- Puedes responder preguntas generales sobre panadería o negocios si el usuario lo pide
-- Máximo 5-6 oraciones o pasos por respuesta
-- Usa **negritas** para resaltar términos importantes";
-
-// ── Llamada a Gemini API ──
-$url  = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$GEMINI_API_KEY}";
 $body = json_encode([
-    'contents' => [
-        [
-            'parts' => [
-                ['text' => $systemContext . "\n\nPregunta del usuario: " . $mensaje]
-            ]
-        ]
-    ],
+    'contents' => [[
+        'parts' => [['text' => $systemContext . "\n\nUsuario pregunta: " . $mensaje]]
+    ]],
     'generationConfig' => [
         'temperature'     => 0.7,
         'maxOutputTokens' => 400,
-        'topP'            => 0.9,
-    ],
-    'safetySettings' => [
-        ['category' => 'HARM_CATEGORY_HARASSMENT',        'threshold' => 'BLOCK_NONE'],
-        ['category' => 'HARM_CATEGORY_HATE_SPEECH',       'threshold' => 'BLOCK_NONE'],
-        ['category' => 'HARM_CATEGORY_SEXUALLY_EXPLICIT', 'threshold' => 'BLOCK_NONE'],
-        ['category' => 'HARM_CATEGORY_DANGEROUS_CONTENT', 'threshold' => 'BLOCK_NONE'],
     ]
 ]);
 
-$ch = curl_init($url);
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_POST           => true,
-    CURLOPT_POSTFIELDS     => $body,
-    CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
-    CURLOPT_TIMEOUT        => 20,
-    CURLOPT_SSL_VERIFYPEER => false,
-]);
+$reply    = null;
+$lastCode = 0;
+$lastErr  = '';
 
-$response = curl_exec($ch);
-$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-$curlError = curl_error($ch);
-curl_close($ch);
+foreach ($modelos as $modelo) {
+    $url = "https://generativelanguage.googleapis.com/v1beta/models/{$modelo}:generateContent?key={$GEMINI_API_KEY}";
+    $ch  = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => $body,
+        CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+        CURLOPT_TIMEOUT        => 15,
+        CURLOPT_SSL_VERIFYPEER => false,
+    ]);
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $lastErr  = curl_error($ch);
+    $lastCode = $httpCode;
+    curl_close($ch);
 
-// ── Procesar respuesta ──
-if ($response === false || $httpCode !== 200) {
-    // Fallback: respuesta local si Gemini falla
-    echo json_encode(['reply' => '⚠️ El asistente de IA no está disponible en este momento. Intenta de nuevo en unos segundos.', 'error' => $curlError]);
-    exit;
+    if ($response !== false && $httpCode === 200) {
+        $data = json_decode($response, true);
+        if (!isset($data['error'])) {
+            $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+            if ($text) { $reply = $text; break; }
+        }
+    }
 }
 
-$data = json_decode($response, true);
-
-if (isset($data['error'])) {
-    echo json_encode(['reply' => '⚠️ Error de la IA: ' . ($data['error']['message'] ?? 'Error desconocido')]);
-    exit;
-}
-
-$reply = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
-
+// ── Si Gemini falla, usar respuestas locales inteligentes ──
 if (!$reply) {
-    echo json_encode(['reply' => '⚠️ No obtuve respuesta. Intenta de nuevo.']);
-    exit;
+    $reply = respuestaLocal(strtolower($mensaje), $rol, $nombre);
 }
 
-// Formatear markdown a HTML básico
+// Formatear markdown a HTML
 $reply = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $reply);
 $reply = preg_replace('/\*(.+?)\*/', '<em>$1</em>', $reply);
 $reply = str_replace("\n", '<br>', $reply);
 
 echo json_encode(['reply' => $reply]);
+
+// ══════════════════════════════════════════════════════════
+// RESPUESTAS LOCALES (fallback cuando Gemini no responde)
+// ══════════════════════════════════════════════════════════
+function respuestaLocal(string $msg, string $rol, string $nombre): string {
+
+    $respuestas = [
+        [['hola','buenas','buenos días','buenas tardes','hey','saludos'],
+         "¡Hola **{$nombre}**! 👋 Soy **PanBot**, tu asistente de PanApp. Puedo ayudarte con ventas, inventario, productos, proveedores, insumos, reportes y usuarios. ¿Qué necesitas?"],
+
+        [['registrar venta','nueva venta','cómo vendo','como vendo','cómo registro','como registro'],
+         "Para registrar una venta 🛒:\n1. Ve a **Ventas** en el menú\n2. Haz clic en **Nueva Venta**\n3. Selecciona los productos del carrito\n4. Elige el **método de pago**\n5. Confirma con **Registrar Venta** ✅"],
+
+        [['inventario','stock','ajustar','entrada','salida'],
+         ($rol==='ADMIN')
+            ? "Para ajustar el stock 📦:\n1. Ve a **Inventario**\n2. Haz clic en **Ajustar Stock** o el ícono ✏️\n3. Selecciona el insumo\n4. Elige **Entrada** (suma) o **Salida** (resta)\n5. Ingresa la cantidad y guarda"
+            : "El módulo de Inventario es exclusivo para Administradores. 🛡️"],
+
+        [['producto','crear producto','agregar producto','nuevo producto'],
+         "Para crear un producto 🍞:\n1. Ve a **Productos**\n2. Haz clic en **Agregar Producto**\n3. Completa: nombre, categoría, precio y unidad\n4. Guarda ✅"],
+
+        [['proveedor','proveedores'],
+         ($rol==='ADMIN') ? "Para gestionar proveedores 🚚:\n→ Ve a **Proveedores** en el menú lateral\n→ Usa **Agregar Proveedor** para crear uno nuevo" : "Los proveedores son gestionados solo por Administradores. 🛡️"],
+
+        [['insumo','insumos','materia prima'],
+         ($rol==='ADMIN') ? "Para gestionar insumos 🌾:\n→ Ve a **Insumos** en el menú\n→ Crea, edita o elimina insumos vinculados a proveedores" : "Los insumos son gestionados solo por Administradores. 🛡️"],
+
+        [['reporte','reportes','pdf','exportar'],
+         "Para ver reportes 📊:\n1. Ve a **Reportes** en el menú\n2. Filtra por: Hoy, Esta semana, Este mes o Todas\n3. Usa **Exportar PDF** para descargar el reporte"],
+
+        [['usuario','usuarios','crear usuario'],
+         ($rol==='ADMIN') ? "Para gestionar usuarios 👥:\n→ Ve a **Usuarios** en el menú\n→ Usa **Agregar Usuario** para crear uno nuevo\n→ Puedes editar, activar/desactivar o eliminar desde la tabla" : "La gestión de usuarios es exclusiva para Administradores. 🛡️"],
+
+        [['cerrar sesión','cerrar sesion','salir','logout'],
+         "Para cerrar sesión 🚪:\n→ Ve al **sidebar** (menú lateral)\n→ En la parte inferior haz clic en el ícono de salida →"],
+
+        [['ayuda','help','qué puedes','que puedes','funciones'],
+         "Puedo ayudarte con:\n🛒 **Ventas** · 📦 **Inventario** · 🍞 **Productos**\n🚚 **Proveedores** · 🌾 **Insumos** · 📊 **Reportes** · 👥 **Usuarios**\n\nPregúntame lo que necesites 😊"],
+
+        [['gracias','adiós','adios','chao','bye'],
+         "¡Con gusto, **{$nombre}**! 🥐 Si necesitas algo más, aquí estaré. ¡Que tengas un excelente día!"],
+    ];
+
+    $mejorRespuesta = null;
+    $mejorPuntaje   = 0;
+
+    foreach ($respuestas as [$palabras, $respuesta]) {
+        $puntaje = 0;
+        foreach ($palabras as $p) {
+            if (strpos($msg, $p) !== false) $puntaje += strlen($p);
+        }
+        if ($puntaje > $mejorPuntaje) {
+            $mejorPuntaje   = $puntaje;
+            $mejorRespuesta = $respuesta;
+        }
+    }
+
+    return $mejorRespuesta ?? "No estoy seguro de cómo ayudarte con eso 🤔\n\nPuedo ayudarte con ventas, inventario, productos, proveedores, insumos, reportes y usuarios. ¿Puedes reformular tu pregunta?";
+}
