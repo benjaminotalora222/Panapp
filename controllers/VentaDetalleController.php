@@ -27,10 +27,7 @@ $venta = $stmtV->fetch(PDO::FETCH_ASSOC);
 
 if (!$venta) { echo json_encode(['error' => 'Venta no encontrada']); exit; }
 
-$rol = strtoupper($_SESSION['usuario']['rol']);
-if ($rol !== 'ADMIN' && $venta['id_usuario'] != $_SESSION['usuario']['id_usuario']) {
-    echo json_encode(['error' => 'Sin permiso']); exit;
-}
+// Todos los usuarios autenticados pueden ver el detalle de cualquier venta
 
 $stmtD = $db->prepare("
     SELECT dv.cantidad, dv.precio_unitario, dv.subtotal, p.nombre

@@ -70,7 +70,7 @@ if ($accion === 'registrar') {
         $db->commit();
         $_SESSION['alert'] = ['icon'=>'success','title'=>'¡Venta registrada!',
             'text' => 'Venta #' . str_pad($id_venta, 4, '0', STR_PAD_LEFT) . ' registrada correctamente.'];
-        header("Location: ../views/dashboard/" . strtolower($_SESSION['usuario']['rol']) . ".php"); exit;
+        header("Location: ../views/ventas/index.php"); exit;
 
     } catch (Exception $e) {
         if ($db->inTransaction()) $db->rollBack();
