@@ -121,23 +121,26 @@ require_once __DIR__ . '/../layouts/header.php';
                     <?php if (strtoupper($usuario['rol']) === 'ADMIN'): ?>
                     <td class="px-5 py-3 text-center">
                         <div class="flex items-center justify-center gap-2">
-                            <a href="editar.php?id=<?= $ins['id_insumo'] ?>"
+                            <!-- Editar → abre modal -->
+                            <button type="button"
+                               onclick="abrirModalEditarInsumo(<?= $ins['id_insumo'] ?>, '<?= htmlspecialchars(addslashes($ins['nombre'])) ?>', '<?= htmlspecialchars(addslashes($ins['descripcion'] ?? '')) ?>', '<?= htmlspecialchars(addslashes($ins['unidad_medida'] ?? '')) ?>', '<?= $ins['id_proveedor'] ?? '' ?>')"
                                class="w-8 h-8 rounded-lg border flex items-center justify-center text-sm transition-all"
                                style="border-color:#F3D5B5;color:#6B4F3A;"
                                onmouseover="this.style.background='#FFF7ED';this.style.borderColor='#F97316';this.style.color='#F97316';"
                                onmouseout="this.style.background='';this.style.borderColor='#F3D5B5';this.style.color='#6B4F3A';"
                                title="Editar">
                                 <i class="fas fa-pen"></i>
-                            </a>
-                            <a href="../../controllers/InsumoController.php?accion=eliminar&id=<?= $ins['id_insumo'] ?>"
+                            </button>
+                            <!-- Eliminar → SweetAlert de confirmación -->
+                            <button type="button"
+                               onclick="confirmarEliminarInsumo(<?= $ins['id_insumo'] ?>, '<?= htmlspecialchars(addslashes($ins['nombre'])) ?>')"
                                class="w-8 h-8 rounded-lg border flex items-center justify-center text-sm transition-all"
                                style="border-color:#FCA5A5;color:#DC2626;"
                                onmouseover="this.style.background='#FEE2E2';"
                                onmouseout="this.style.background='';"
-                               title="Eliminar"
-                               onclick="return confirm('¿Eliminar este insumo?');">
+                               title="Eliminar">
                                 <i class="fas fa-trash"></i>
-                            </a>
+                            </button>
                         </div>
                     </td>
                     <?php endif; ?>
@@ -266,5 +269,150 @@ document.getElementById('form-insumo').addEventListener('submit', function(e) {
     })
     .catch(function() { err.textContent = '⚠️ Error de conexión.'; err.classList.remove('hidden'); })
     .finally(function() { btn.disabled = false; txt.textContent = 'Crear Insumo'; btn.style.opacity = '1'; });
+});
+</script>
+
+<!-- ══ MODAL EDITAR INSUMO ══ -->
+<div id="modal-editar-insumo" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+     style="background:rgba(28,10,0,0.45);backdrop-filter:blur(4px);display:none!important;">
+    <div id="modal-editar-insumo-box" class="bg-white rounded-2xl w-full shadow-2xl"
+         style="max-width:500px;border:1px solid #F3D5B5;transform:scale(0.92) translateY(16px);opacity:0;transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1),opacity 0.2s ease;">
+
+        <div class="flex items-center justify-between px-6 py-5 border-b" style="border-color:#F3D5B5;">
+            <div>
+                <h3 class="text-lg font-black" style="color:#1C0A00;">Editar <span style="color:#F97316;">Insumo</span></h3>
+                <p class="text-xs font-semibold mt-0.5" style="color:#A87D5C;">Modifica los datos del insumo</p>
+            </div>
+            <button onclick="cerrarModal('modal-editar-insumo','modal-editar-insumo-box')"
+                    class="w-8 h-8 rounded-xl flex items-center justify-center text-sm transition-all"
+                    style="background:#FFF7ED;border:1px solid #F3D5B5;color:#A87D5C;"
+                    onmouseover="this.style.background='#FEE2E2';this.style.color='#DC2626';"
+                    onmouseout="this.style.background='#FFF7ED';this.style.color='#A87D5C';">✕</button>
+        </div>
+
+        <form id="form-editar-insumo" class="px-6 py-5 flex flex-col gap-4">
+            <input type="hidden" id="ei-id">
+
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-black uppercase tracking-wider" style="color:#6B4F3A;">Nombre <span style="color:#F97316;">*</span></label>
+                <div class="relative">
+                    <i class="fas fa-seedling absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:#A87D5C;"></i>
+                    <input type="text" name="nombre" id="ei-nombre" required maxlength="100"
+                           class="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm font-semibold outline-none transition-all"
+                           style="background:#FFF7ED;border:1.5px solid #F3D5B5;color:#1C0A00;"
+                           onfocus="this.style.borderColor='#F97316';this.style.background='#fff';"
+                           onblur="this.style.borderColor='#F3D5B5';this.style.background='#FFF7ED';">
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-1">
+                <label class="text-xs font-black uppercase tracking-wider" style="color:#6B4F3A;">Descripción <span class="font-semibold normal-case" style="color:#A87D5C;">(opcional)</span></label>
+                <textarea name="descripcion" id="ei-descripcion" rows="2" maxlength="150"
+                          class="w-full px-3 py-2.5 rounded-xl text-sm font-semibold outline-none transition-all resize-none"
+                          style="background:#FFF7ED;border:1.5px solid #F3D5B5;color:#1C0A00;"
+                          onfocus="this.style.borderColor='#F97316';this.style.background='#fff';"
+                          onblur="this.style.borderColor='#F3D5B5';this.style.background='#FFF7ED';"></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-black uppercase tracking-wider" style="color:#6B4F3A;">Unidad <span style="color:#F97316;">*</span></label>
+                    <div class="relative">
+                        <i class="fas fa-ruler absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:#A87D5C;"></i>
+                        <select name="unidad_medida" id="ei-unidad" required class="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm font-semibold outline-none appearance-none"
+                                style="background:#FFF7ED;border:1.5px solid #F3D5B5;color:#1C0A00;"
+                                onfocus="this.style.borderColor='#F97316';" onblur="this.style.borderColor='#F3D5B5';">
+                            <option value="">-- Selecciona --</option>
+                            <?php foreach (['Kilo','Gramo','Libra','Litro','Mililitro','Unidad','Docena','Bolsa','Caja','Arroba'] as $u): ?>
+                            <option value="<?= $u ?>"><?= $u ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-black uppercase tracking-wider" style="color:#6B4F3A;">Proveedor <span class="font-semibold normal-case" style="color:#A87D5C;">(opcional)</span></label>
+                    <div class="relative">
+                        <i class="fas fa-truck absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:#A87D5C;"></i>
+                        <select name="id_proveedor" id="ei-proveedor" class="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm font-semibold outline-none appearance-none"
+                                style="background:#FFF7ED;border:1.5px solid #F3D5B5;color:#1C0A00;"
+                                onfocus="this.style.borderColor='#F97316';" onblur="this.style.borderColor='#F3D5B5';">
+                            <option value="">-- Sin proveedor --</option>
+                            <?php
+                            $stmtProvEdit = $db->prepare("SELECT id_proveedor, nombre FROM proveedores WHERE estado = 'activo' ORDER BY nombre ASC");
+                            $stmtProvEdit->execute();
+                            foreach ($stmtProvEdit->fetchAll(PDO::FETCH_ASSOC) as $prov):
+                            ?>
+                            <option value="<?= $prov['id_proveedor'] ?>"><?= htmlspecialchars($prov['nombre']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="error-editar-insumo" class="hidden px-4 py-3 rounded-xl text-sm font-bold"
+                 style="background:#FEE2E2;color:#991B1B;border:1px solid #FCA5A5;"></div>
+
+            <div class="flex gap-3 pt-1">
+                <button type="submit" id="btn-editar-insumo"
+                        class="flex-1 py-2.5 rounded-xl text-sm font-black text-white flex items-center justify-center gap-2"
+                        style="background:#F97316;box-shadow:0 4px 14px rgba(249,115,22,0.3);"
+                        onmouseover="this.style.background='#EA6A0A';" onmouseout="this.style.background='#F97316';">
+                    <i class="fas fa-save"></i> <span id="btn-editar-insumo-txt">Guardar Cambios</span>
+                </button>
+                <button type="button" onclick="cerrarModal('modal-editar-insumo','modal-editar-insumo-box')"
+                        class="px-5 py-2.5 rounded-xl text-sm font-black transition-all"
+                        style="background:#FFF7ED;border:1.5px solid #F3D5B5;color:#6B4F3A;"
+                        onmouseover="this.style.background='#F3D5B5';" onmouseout="this.style.background='#FFF7ED';">
+                    Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// ── Abrir modal editar con datos precargados ──
+function abrirModalEditarInsumo(id, nombre, descripcion, unidad, idProveedor) {
+    abrirModal('modal-editar-insumo', 'modal-editar-insumo-box');
+    document.getElementById('ei-id').value          = id;
+    document.getElementById('ei-nombre').value      = nombre;
+    document.getElementById('ei-descripcion').value = descripcion;
+    document.getElementById('ei-unidad').value      = unidad;
+    document.getElementById('ei-proveedor').value   = idProveedor || '';
+    document.getElementById('error-editar-insumo').classList.add('hidden');
+}
+
+// ── Confirmar eliminar con SweetAlert ──
+function confirmarEliminarInsumo(id, nombre) {
+    Swal.fire({
+        icon: 'warning',
+        title: '¿Eliminar insumo?',
+        html: 'El insumo <strong>' + nombre + '</strong> será eliminado permanentemente junto con su historial de inventario.',
+        showCancelButton: true,
+        confirmButtonText: '🗑️ Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#DC2626'
+    }).then(function(result) {
+        if (result.isConfirmed) {
+            window.location.href = '/PanApp/controllers/InsumoController.php?accion=eliminar&id=' + id;
+        }
+    });
+}
+
+// ── Submit editar ──
+document.getElementById('form-editar-insumo').addEventListener('submit', function(e) {
+    e.preventDefault();
+    var btn = document.getElementById('btn-editar-insumo');
+    var txt = document.getElementById('btn-editar-insumo-txt');
+    var err = document.getElementById('error-editar-insumo');
+    var id  = document.getElementById('ei-id').value;
+    btn.disabled = true; txt.textContent = 'Guardando...'; btn.style.opacity = '0.75';
+    fetch('/PanApp/controllers/InsumoController.php?accion=editar&id=' + id, { method: 'POST', body: new FormData(this) })
+    .then(function() {
+        Swal.fire({ icon: 'success', title: '¡Insumo actualizado!', text: 'Los cambios fueron guardados correctamente.', confirmButtonColor: '#F97316' })
+        .then(function() { window.location.reload(); });
+    })
+    .catch(function() { err.textContent = '⚠️ Error de conexión.'; err.classList.remove('hidden'); })
+    .finally(function() { btn.disabled = false; txt.textContent = 'Guardar Cambios'; btn.style.opacity = '1'; });
 });
 </script>

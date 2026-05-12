@@ -102,7 +102,11 @@ $metodosPagoDash = $stmtPagoDash->fetchAll(PDO::FETCH_ASSOC);
      style="background:linear-gradient(135deg,#F97316,#FB923C);box-shadow:0 6px 24px rgba(249,115,22,0.3);">
     <div>
         <p class="text-sm font-bold mb-1" style="color:rgba(255,255,255,0.75);">
-            <?= date('l, d \d\e F \d\e Y') ?>
+            <?php
+            $diasES   = ['Sunday'=>'Domingo','Monday'=>'Lunes','Tuesday'=>'Martes','Wednesday'=>'Miércoles','Thursday'=>'Jueves','Friday'=>'Viernes','Saturday'=>'Sábado'];
+            $mesesES  = ['January'=>'Enero','February'=>'Febrero','March'=>'Marzo','April'=>'Abril','May'=>'Mayo','June'=>'Junio','July'=>'Julio','August'=>'Agosto','September'=>'Septiembre','October'=>'Octubre','November'=>'Noviembre','December'=>'Diciembre'];
+            echo $diasES[date('l')] . ', ' . date('d') . ' de ' . $mesesES[date('F')] . ' de ' . date('Y');
+            ?>
         </p>
         <h2 class="text-2xl font-black text-white mb-1">
             ¡Bienvenido, <?= htmlspecialchars(explode(' ', $usuario['nombres'])[0]) ?>! 🥐

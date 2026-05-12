@@ -35,7 +35,7 @@ switch ($periodo) {
         break;
 }
 
-$condUsuario = ($rol !== 'ADMIN') ? "AND v.id_usuario = " . intval($_SESSION['usuario']['id_usuario']) : '';
+$condUsuario = '';
 
 // Ventas
 $stmtV = $db->prepare("

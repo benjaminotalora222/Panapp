@@ -38,8 +38,8 @@ switch ($periodo) {
         break;
 }
 
-// ─── Condición de usuario ───
-$condUsuario = ($rol !== 'ADMIN') ? "AND v.id_usuario = " . intval($_SESSION['usuario']['id_usuario']) : '';
+// ─── Condición de usuario — todos ven todos los datos ───
+$condUsuario = '';
 
 // ─── Reporte de VENTAS ───
 $stmtV = $db->prepare("
