@@ -27,6 +27,26 @@ if ($accion === 'registrar') {
     $total      = floatval($_POST['total']         ?? 0);
     $itemsJson  = $_POST['items']                  ?? '[]';
 
+    // Si id_metodo es 0, buscar por nombre
+    if ($id_metodo <= 0) {
+        $nombreMetodo = trim($_POST['id_metodo_pago'] ?? '');
+        if (!empty($nombreMetodo)) {
+            $stmtM = $db->prepare("SELECT id_metodo_pago FROM metodos_pago WHERE nombre = :nombre LIMIT 1");
+            $stmtM->bindParam(':nombre', $nombreMetodo);
+            $stmtM->execute();
+            $metodoRow = $stmtM->fetch(PDO::FETCH_ASSOC);
+            if ($metodoRow) {
+                $id_metodo = intval($metodoRow['id_metodo_pago']);
+            } else {
+                // Crear el método de pago si no existe
+                $stmtIns = $db->prepare("INSERT INTO metodos_pago (nombre) VALUES (:nombre)");
+                $stmtIns->bindParam(':nombre', $nombreMetodo);
+                $stmtIns->execute();
+                $id_metodo = intval($db->lastInsertId());
+            }
+        }
+    }
+
     if ($id_metodo <= 0 || $total <= 0) {
         $_SESSION['alert'] = ['icon'=>'error','title'=>'Error','text'=>'Datos de venta inválidos.'];
         header("Location: ../views/ventas/crear.php"); exit;

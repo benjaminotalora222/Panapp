@@ -6,7 +6,7 @@ if (!isset($_SESSION['usuario']) || strtoupper($_SESSION['usuario']['rol']) !== 
 }
 
 require_once __DIR__ . '/../../config/database.php';
-require_once __DIR__ . '/../../models/Usuario.php';
+require_once __DIR__ . '/../../models/usuario.php';
 
 $db           = (new Database())->conectar();
 $usuarioModel = new Usuario($db);

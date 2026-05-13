@@ -66,8 +66,12 @@ CREATE TABLE `productos` (
   `descripcion` varchar(150),
   `categoria` varchar(50),
   `precio` decimal(10,2) NOT NULL,
-  `unidad_medida` varchar(50)
+  `unidad_medida` varchar(50),
+  `imagen` varchar(255) DEFAULT NULL
 );
+
+-- Agregar columna imagen si la tabla ya existe:
+-- ALTER TABLE `productos` ADD COLUMN `imagen` varchar(255) DEFAULT NULL;
 
 CREATE TABLE `producto_insumo` (
   `id_producto` int,
@@ -115,3 +119,11 @@ ALTER TABLE `ventas` ADD FOREIGN KEY (`id_metodo_pago`) REFERENCES `metodos_pago
 ALTER TABLE `detalle_venta` ADD FOREIGN KEY (`id_venta`) REFERENCES `ventas` (`id_venta`);
 
 ALTER TABLE `detalle_venta` ADD FOREIGN KEY (`id_producto`) REFERENCES `productos` (`id_producto`);
+
+-- ── Métodos de pago ──
+INSERT IGNORE INTO `metodos_pago` (`id_metodo_pago`, `nombre`) VALUES
+(1, 'Efectivo'),
+(2, 'Nequi'),
+(3, 'Daviplata'),
+(4, 'Tarjeta'),
+(5, 'Transferencia');

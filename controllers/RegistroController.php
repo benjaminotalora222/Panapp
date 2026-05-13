@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -7,7 +7,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../models/Usuario.php';
+require_once __DIR__ . '/../models/usuario.php';
 
 $nombres            = trim($_POST['nombres']            ?? '');
 $apellidos          = trim($_POST['apellidos']          ?? '');

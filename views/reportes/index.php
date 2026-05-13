@@ -287,16 +287,16 @@ require_once __DIR__ . '/../layouts/header.php';
 
 <?php require_once __DIR__ . '/../layouts/footer.php'; ?>
 
-<!-- ══ MODAL EXPORTAR PDF ══ -->
+<!-- ══ MODAL SELECTOR DE PERÍODO ══ -->
 <div id="modal-exportar-pdf" class="fixed inset-0 z-50 flex items-center justify-center p-4"
      style="background:rgba(28,10,0,0.5);backdrop-filter:blur(4px);display:none!important;">
     <div id="modal-exportar-pdf-box" class="bg-white rounded-2xl w-full shadow-2xl"
          style="max-width:420px;border:1px solid #F3D5B5;transform:scale(0.92) translateY(16px);opacity:0;transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1),opacity 0.2s ease;">
 
-        <!-- Header -->
-        <div class="flex items-center justify-between px-6 py-5 border-b" style="border-color:#F3D5B5;background:linear-gradient(135deg,#1C0A00,#3D1A00);border-radius:16px 16px 0 0;">
+        <div class="flex items-center justify-between px-6 py-5 border-b"
+             style="border-color:#F3D5B5;background:linear-gradient(135deg,#1C0A00,#3D1A00);border-radius:16px 16px 0 0;">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl flex items-center justify-center text-lg" style="background:rgba(255,255,255,0.1);">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:rgba(255,255,255,0.1);">
                     <i class="fas fa-file-pdf" style="color:#fff;"></i>
                 </div>
                 <div>
@@ -311,40 +311,35 @@ require_once __DIR__ . '/../layouts/header.php';
                     onmouseout="this.style.background='rgba(255,255,255,0.1)';">✕</button>
         </div>
 
-        <!-- Opciones de período -->
         <div class="px-6 py-5 flex flex-col gap-3">
-
             <p class="text-xs font-black uppercase tracking-wider mb-1" style="color:#A87D5C;">Período del reporte</p>
-
             <?php
             $opcionesPDF = [
-                'diario'  => ['Hoy',          'fas fa-calendar-day',  '#FFF7ED', '#F97316', date('d/m/Y')],
-                'semanal' => ['Esta semana',   'fas fa-calendar-week', '#EFF6FF', '#3B82F6', date('d/m/Y', strtotime('monday this week')) . ' — ' . date('d/m/Y', strtotime('sunday this week'))],
-                'mensual' => ['Este mes',      'fas fa-calendar-alt',  '#F0FDF4', '#10B981', date('F Y')],
-                'todo'    => ['Todas las ventas','fas fa-calendar',    '#F5F3FF', '#8B5CF6', 'Historial completo'],
+                'diario'  => ['Hoy',             'fas fa-calendar-day',  '#FFF7ED', '#F97316', date('d/m/Y')],
+                'semanal' => ['Esta semana',      'fas fa-calendar-week', '#EFF6FF', '#3B82F6', date('d/m/Y', strtotime('monday this week')).' — '.date('d/m/Y', strtotime('sunday this week'))],
+                'mensual' => ['Este mes',         'fas fa-calendar-alt',  '#F0FDF4', '#10B981', date('F Y')],
+                'todo'    => ['Todas las ventas', 'fas fa-calendar',      '#F5F3FF', '#8B5CF6', 'Historial completo'],
             ];
             foreach ($opcionesPDF as $key => [$label, $icon, $bg, $color, $sub]):
             ?>
-            <a href="exportar_pdf.php?periodo=<?= $key ?>&tab=<?= $tab ?>"
-               class="flex items-center gap-4 px-4 py-3.5 rounded-xl border no-underline transition-all group"
-               style="border-color:#F3D5B5;"
+            <button type="button"
+               onclick="verPDFEnModal('exportar_pdf.php?periodo=<?= $key ?>&tab=<?= $tab ?>', '<?= $label ?>')"
+               class="flex items-center gap-4 px-4 py-3.5 rounded-xl border w-full text-left transition-all"
+               style="border-color:#F3D5B5;background:#fff;cursor:pointer;font-family:inherit;"
                onmouseover="this.style.borderColor='<?= $color ?>';this.style.background='<?= $bg ?>';this.style.transform='translateX(3px)';"
-               onmouseout="this.style.borderColor='#F3D5B5';this.style.background='';this.style.transform='';">
-                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                     style="background:<?= $bg ?>;">
+               onmouseout="this.style.borderColor='#F3D5B5';this.style.background='#fff';this.style.transform='';">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background:<?= $bg ?>;">
                     <i class="<?= $icon ?>" style="color:<?= $color ?>;font-size:16px;"></i>
                 </div>
                 <div class="flex-1">
                     <p class="font-black text-sm" style="color:#1C0A00;"><?= $label ?></p>
                     <p class="text-xs font-semibold" style="color:#A87D5C;"><?= $sub ?></p>
                 </div>
-                <i class="fas fa-download text-xs" style="color:#A87D5C;"></i>
-            </a>
+                <i class="fas fa-eye text-xs" style="color:#A87D5C;"></i>
+            </button>
             <?php endforeach; ?>
-
         </div>
 
-        <!-- Footer -->
         <div class="px-6 pb-5">
             <button onclick="cerrarModal('modal-exportar-pdf','modal-exportar-pdf-box')"
                     class="w-full py-2.5 rounded-xl text-sm font-black transition-all"
@@ -353,12 +348,97 @@ require_once __DIR__ . '/../layouts/header.php';
                 Cancelar
             </button>
         </div>
+    </div>
+</div>
 
+<!-- ══ MODAL VISOR PDF (iframe) ══ -->
+<div id="modal-visor-pdf" class="fixed inset-0 z-[60] flex items-center justify-center p-4"
+     style="background:rgba(28,10,0,0.6);backdrop-filter:blur(6px);display:none!important;">
+    <div id="modal-visor-pdf-box" class="bg-white rounded-2xl w-full shadow-2xl flex flex-col"
+         style="max-width:960px;height:90vh;border:1px solid #F3D5B5;transform:scale(0.92) translateY(16px);opacity:0;transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1),opacity 0.2s ease;">
+
+        <!-- Header visor -->
+        <div class="flex items-center justify-between px-6 py-4 flex-shrink-0"
+             style="background:linear-gradient(135deg,#1C0A00,#3D1A00);border-radius:16px 16px 0 0;">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:rgba(255,255,255,0.1);">
+                    <i class="fas fa-file-pdf" style="color:#F97316;font-size:18px;"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-black text-white" id="visor-titulo">Reporte PDF</h3>
+                    <p class="text-xs font-semibold" style="color:rgba(255,255,255,0.65);">Usa el botón imprimir para guardar como PDF</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="imprimirIframe()"
+                        class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-black transition-all"
+                        style="background:#F97316;color:#fff;border:none;cursor:pointer;"
+                        onmouseover="this.style.background='#EA6A0A';" onmouseout="this.style.background='#F97316';">
+                    <i class="fas fa-print"></i> Imprimir / PDF
+                </button>
+                <button onclick="cerrarVisorPDF()"
+                        class="w-9 h-9 rounded-xl flex items-center justify-center text-sm transition-all"
+                        style="background:rgba(255,255,255,0.1);color:#fff;border:none;cursor:pointer;"
+                        onmouseover="this.style.background='rgba(220,38,38,0.6)';"
+                        onmouseout="this.style.background='rgba(255,255,255,0.1)';">✕</button>
+            </div>
+        </div>
+
+        <!-- Spinner de carga -->
+        <div id="visor-loading" class="flex items-center justify-center gap-3 py-10 flex-shrink-0" style="color:#A87D5C;">
+            <i class="fas fa-spinner fa-spin text-xl" style="color:#F97316;"></i>
+            <span class="text-sm font-bold">Generando reporte...</span>
+        </div>
+
+        <!-- iframe -->
+        <iframe id="pdf-iframe" src="" frameborder="0"
+                style="flex:1;width:100%;border-radius:0 0 16px 16px;display:none;"
+                onload="iframeLoaded()"></iframe>
     </div>
 </div>
 
 <script>
 function abrirModalExportarPDF() {
     abrirModal('modal-exportar-pdf', 'modal-exportar-pdf-box');
+}
+
+function verPDFEnModal(url, label) {
+    // Cerrar el selector de período
+    cerrarModal('modal-exportar-pdf', 'modal-exportar-pdf-box');
+
+    // Preparar el visor
+    document.getElementById('visor-titulo').textContent = 'Reporte — ' + label;
+    document.getElementById('visor-loading').style.display = 'flex';
+    document.getElementById('pdf-iframe').style.display    = 'none';
+    document.getElementById('pdf-iframe').src = '';
+
+    // Abrir el modal visor
+    setTimeout(function() {
+        abrirModal('modal-visor-pdf', 'modal-visor-pdf-box');
+        // Cargar el iframe después de que el modal esté visible
+        setTimeout(function() {
+            document.getElementById('pdf-iframe').src = url;
+        }, 150);
+    }, 200);
+}
+
+function iframeLoaded() {
+    document.getElementById('visor-loading').style.display = 'none';
+    document.getElementById('pdf-iframe').style.display    = 'block';
+}
+
+function imprimirIframe() {
+    var iframe = document.getElementById('pdf-iframe');
+    if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+    }
+}
+
+function cerrarVisorPDF() {
+    cerrarModal('modal-visor-pdf', 'modal-visor-pdf-box');
+    setTimeout(function() {
+        document.getElementById('pdf-iframe').src = '';
+    }, 300);
 }
 </script>

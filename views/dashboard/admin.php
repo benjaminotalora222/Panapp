@@ -1,4 +1,6 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 session_start();
 
 if (!isset($_SESSION['usuario']) || strtoupper($_SESSION['usuario']['rol']) !== 'ADMIN') {
@@ -7,7 +9,7 @@ if (!isset($_SESSION['usuario']) || strtoupper($_SESSION['usuario']['rol']) !== 
 }
 
 require_once __DIR__ . '/../../config/database.php';
-require_once __DIR__ . '/../../models/Usuario.php';
+require_once __DIR__ . '/../../models/usuario.php';
 
 $database     = new Database();
 $db           = $database->conectar();
@@ -92,7 +94,7 @@ $stmtProdDash = $db->prepare("SELECT id_producto, nombre, precio, categoria, uni
 $stmtProdDash->execute();
 $productosDash = $stmtProdDash->fetchAll(PDO::FETCH_ASSOC);
 
-$stmtPagoDash = $db->prepare("SELECT id_metodo_pago, nombre FROM metodos_pago ORDER BY nombre");
+$stmtPagoDash = $db->prepare("SELECT id_metodo_pago, nombre FROM metodos_pago WHERE nombre IN ('Efectivo','Nequi') ORDER BY nombre");
 $stmtPagoDash->execute();
 $metodosPagoDash = $stmtPagoDash->fetchAll(PDO::FETCH_ASSOC);
 ?>
@@ -661,14 +663,34 @@ function fmt(n) {
                     </div>
                     <div class="mb-3">
                         <label class="text-xs font-black uppercase tracking-wider block mb-1.5" style="color:#6B4F3A;">Método de Pago</label>
-                        <div class="relative">
-                            <i class="fas fa-credit-card absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:#A87D5C;"></i>
-                            <select id="mvd-metodo" class="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm font-semibold outline-none appearance-none" style="background:#FFF7ED;border:1.5px solid #F3D5B5;color:#1C0A00;" onfocus="this.style.borderColor='#F97316';" onblur="this.style.borderColor='#F3D5B5';">
-                                <option value="">-- Selecciona --</option>
-                                <?php foreach ($metodosPagoDash as $mp): ?>
-                                <option value="<?= $mp['id_metodo_pago'] ?>"><?= htmlspecialchars($mp['nombre']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
+                        <input type="hidden" id="mvd-metodo" value="">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                            <?php
+                            $iconosPago = [
+                                'Efectivo'       => '💵',
+                                'Nequi'          => '📱',
+                                'Daviplata'      => '📲',
+                                'Tarjeta débito' => '💳',
+                                'Tarjeta crédito'=> '💳',
+                                'Transferencia'  => '🏦',
+                            ];
+                            foreach ($metodosPagoDash as $mp):
+                                $icono = $iconosPago[$mp['nombre']] ?? '💰';
+                            ?>
+                            <button type="button"
+                                    class="mvd-pago-btn"
+                                    data-id="<?= $mp['id_metodo_pago'] ?>"
+                                    onclick="mvdSeleccionarPago(this)"
+                                    style="display:flex;align-items:center;gap:6px;padding:8px 10px;
+                                           border-radius:10px;border:1.5px solid #F3D5B5;
+                                           background:#FFF7ED;cursor:pointer;transition:all .15s;
+                                           font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;color:#6B4F3A;"
+                                    onmouseover="if(!this.classList.contains('selected')){this.style.borderColor='#F97316';this.style.background='#fff';}"
+                                    onmouseout="if(!this.classList.contains('selected')){this.style.borderColor='#F3D5B5';this.style.background='#FFF7ED';}">
+                                <span style="font-size:16px;"><?= $icono ?></span>
+                                <span><?= htmlspecialchars($mp['nombre']) ?></span>
+                            </button>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                     <button onclick="mvdConfirmar()" class="w-full py-2.5 rounded-xl text-sm font-black text-white flex items-center justify-center gap-2" style="background:#F97316;box-shadow:0 4px 14px rgba(249,115,22,0.35);" onmouseover="this.style.background='#EA6A0A';" onmouseout="this.style.background='#F97316';"><i class="fas fa-check"></i> Registrar Venta</button>
@@ -692,6 +714,12 @@ function fmt(n) {
         carrito={};mvdRender();
         document.getElementById('mvd-buscador').value='';mvdFiltrar('');
         document.getElementById('mvd-metodo').value='';
+        document.querySelectorAll('.mvd-pago-btn').forEach(function(b){
+            b.classList.remove('selected');
+            b.style.borderColor='#F3D5B5';
+            b.style.background='#FFF7ED';
+            b.style.color='#6B4F3A';
+        });
     };
     window.cerrarModalVentaDash=function(){ cerrarModal('modal-venta-dash','modal-venta-dash-box'); };
     window.mvdAgregar=function(el){
@@ -728,5 +756,18 @@ function fmt(n) {
         .then(function(r){ if(r.isConfirmed){ document.getElementById('mvd-input-metodo').value=metodo; document.getElementById('mvd-input-total').value=total; document.getElementById('mvd-input-items').value=JSON.stringify(items); document.getElementById('mvd-form').submit(); } });
     };
     function mvdFmt(n){ return new Intl.NumberFormat('es-CO').format(n); }
+    window.mvdSeleccionarPago=function(btn){
+        document.querySelectorAll('.mvd-pago-btn').forEach(function(b){
+            b.classList.remove('selected');
+            b.style.borderColor='#F3D5B5';
+            b.style.background='#FFF7ED';
+            b.style.color='#6B4F3A';
+        });
+        btn.classList.add('selected');
+        btn.style.borderColor='#F97316';
+        btn.style.background='linear-gradient(135deg,#F97316,#EA6A0A)';
+        btn.style.color='#fff';
+        document.getElementById('mvd-metodo').value=btn.dataset.id;
+    };
 })();
 </script>

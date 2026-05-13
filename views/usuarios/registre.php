@@ -1,8 +1,14 @@
 <?php
 session_start();
 
-$alert = $_SESSION['alert'] ?? null;
-unset($_SESSION['alert']);
+// Registro público deshabilitado — solo el administrador puede crear usuarios
+$_SESSION['alert'] = [
+    'icon'  => 'warning',
+    'title' => 'Registro restringido',
+    'text'  => 'El registro de nuevos usuarios está restringido. Solo el Administrador puede crear cuentas desde el panel de administración.'
+];
+header("Location: login.php");
+exit;
 ?>
 <!DOCTYPE html>
 <html lang="es">

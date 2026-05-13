@@ -574,13 +574,21 @@ $metodosPagoModal = $stmtPago->fetchAll(PDO::FETCH_ASSOC);
                     </div>
                     <div class="mb-3">
                         <label class="text-xs font-black uppercase tracking-wider block mb-1.5" style="color:#6B4F3A;">Método de Pago</label>
-                        <div class="relative"><i class="fas fa-credit-card absolute left-3 top-1/2 -translate-y-1/2 text-xs" style="color:#A87D5C;"></i>
-                        <select id="mv-metodo" class="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm font-semibold outline-none appearance-none" style="background:#FFF7ED;border:1.5px solid #F3D5B5;color:#1C0A00;" onfocus="this.style.borderColor='#F97316';" onblur="this.style.borderColor='#F3D5B5';">
-                            <option value="">-- Selecciona --</option>
-                            <?php foreach ($metodosPagoModal as $mp): ?>
-                            <option value="<?= $mp['id_metodo_pago'] ?>"><?= htmlspecialchars($mp['nombre']) ?></option>
-                            <?php endforeach; ?>
-                        </select></div>
+                        <input type="hidden" id="mv-metodo" value="">
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" id="mv-btn-efectivo"
+                                    onclick="mvElegirPago('Efectivo','mv-btn-efectivo','mv-btn-nequi')"
+                                    class="py-2.5 rounded-xl text-sm font-black border transition-all"
+                                    style="background:#FFF7ED;border-color:#F3D5B5;color:#6B4F3A;">
+                                💵 Efectivo
+                            </button>
+                            <button type="button" id="mv-btn-nequi"
+                                    onclick="mvElegirPago('Nequi','mv-btn-nequi','mv-btn-efectivo')"
+                                    class="py-2.5 rounded-xl text-sm font-black border transition-all"
+                                    style="background:#FFF7ED;border-color:#F3D5B5;color:#6B4F3A;">
+                                📱 Nequi
+                            </button>
+                        </div>
                     </div>
                     <button onclick="mvConfirmar()" class="w-full py-2.5 rounded-xl text-sm font-black text-white flex items-center justify-center gap-2" style="background:#F97316;box-shadow:0 4px 14px rgba(249,115,22,0.35);" onmouseover="this.style.background='#EA6A0A';" onmouseout="this.style.background='#F97316';"><i class="fas fa-check"></i> Registrar Venta</button>
                 </div>
@@ -641,6 +649,10 @@ var _ventaIdModal2 = null;
         carrito={};mvRender();
         document.getElementById('mv-buscador').value='';mvFiltrar('');
         document.getElementById('mv-metodo').value='';
+        // Limpiar botones de pago
+        var e=document.getElementById('mv-btn-efectivo'), n=document.getElementById('mv-btn-nequi');
+        if(e){e.style.background='#FFF7ED';e.style.borderColor='#F3D5B5';e.style.color='#6B4F3A';}
+        if(n){n.style.background='#FFF7ED';n.style.borderColor='#F3D5B5';n.style.color='#6B4F3A';}
     };
     window.cerrarModalVenta=function(){ cerrarModal('modal-venta','modal-venta-box'); };
     window.mvAgregar=function(el){
@@ -677,6 +689,19 @@ var _ventaIdModal2 = null;
         .then(function(r){ if(r.isConfirmed){ document.getElementById('mv-input-metodo').value=metodo; document.getElementById('mv-input-total').value=total; document.getElementById('mv-input-items').value=JSON.stringify(items); document.getElementById('mv-form').submit(); } });
     };
     function mvFmt(n){ return new Intl.NumberFormat('es-CO').format(n); }
+
+    // ── Botones de método de pago ──
+    window.mvElegirPago = function(nombre, btnActivo, btnOtro) {
+        var activo = document.getElementById(btnActivo);
+        var otro   = document.getElementById(btnOtro);
+        document.getElementById('mv-metodo').value = nombre;
+        if (nombre === 'Efectivo') {
+            activo.style.background='#D1FAE5'; activo.style.borderColor='#10B981'; activo.style.color='#065F46';
+        } else {
+            activo.style.background='#EDE9FE'; activo.style.borderColor='#8B5CF6'; activo.style.color='#5B21B6';
+        }
+        otro.style.background='#FFF7ED'; otro.style.borderColor='#F3D5B5'; otro.style.color='#6B4F3A';
+    };
 })();
 
 // ── Modal Detalle Venta ──

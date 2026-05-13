@@ -283,7 +283,7 @@ unset($_SESSION['alert']);
             <div class="divider">o</div>
 
             <div class="footer-link">
-                ¿No tienes cuenta? <a href="registre.php">Regístrate aquí</a>
+                ¿No tienes cuenta? <a href="#" onclick="mostrarSinCuenta(event)">Regístrate aquí</a>
             </div>
             <a href="/PanApp/public/index.php" class="back-link">
                 <i class="fas fa-arrow-left"></i> Volver al inicio

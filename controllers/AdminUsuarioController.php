@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 
 if (!isset($_SESSION['usuario']) || strtoupper($_SESSION['usuario']['rol']) !== 'ADMIN') {
@@ -7,7 +7,7 @@ if (!isset($_SESSION['usuario']) || strtoupper($_SESSION['usuario']['rol']) !== 
 }
 
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../models/Usuario.php';
+require_once __DIR__ . '/../models/usuario.php';
 
 $database     = new Database();
 $db           = $database->conectar();
