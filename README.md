@@ -17,7 +17,3 @@ Optimizar y agilizar los procesos administrativos y operativos de una panadería
 -  Gestión de proveedores
 -  Gestión de insumos
 -  Control de entrada y salida de materia prima
-
-## 🛠️ Tecnologías
-- Lenguaje principal: Python
-- (Base de datos Laragon)
